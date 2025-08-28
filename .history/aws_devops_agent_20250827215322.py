@@ -30,15 +30,7 @@ class AWSDevOpsAgent:
         # Official AWS MCP Servers
         self.aws_mcp_servers = {
             "pricing": "awslabs.aws-pricing-mcp-server@latest",
-            "dynamodb": "awslabs.dynamodb-mcp-server@latest",
-            "cost_explorer": "awslabs.cost-explorer-mcp-server@latest",
-            "terraform": "awslabs.terraform-mcp-server@latest",
-            "github": "github.github-mcp-server@latest",
-            "cloudwatch": "awslabs.cloudwatch-mcp-server@latest",
-            "aws_diagram": "awslabs.aws-diagram-mcp-server@latest",
-            "aws_documentation": "awslabs.aws-documentation-mcp-server@latest",
-            "aws_knowledge": "awslabs.aws-knowledge-mcp-server@latest",
-            "code_doc_gen": "awslabs.code-doc-gen-mcp-server@latest"
+            "dynamodb": "awslabs.dynamodb-mcp-server@latest"
         }
     
     async def setup_mcp_server(self, name: str, package: str) -> List[Any]:

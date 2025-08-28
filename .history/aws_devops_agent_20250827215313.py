@@ -30,15 +30,7 @@ class AWSDevOpsAgent:
         # Official AWS MCP Servers
         self.aws_mcp_servers = {
             "pricing": "awslabs.aws-pricing-mcp-server@latest",
-            "dynamodb": "awslabs.dynamodb-mcp-server@latest",
-            "cost_explorer": "awslabs.cost-explorer-mcp-server@latest",
-            "terraform": "awslabs.terraform-mcp-server@latest",
-            "github": "github.github-mcp-server@latest",
-            "cloudwatch": "awslabs.cloudwatch-mcp-server@latest",
-            "aws_diagram": "awslabs.aws-diagram-mcp-server@latest",
-            "aws_documentation": "awslabs.aws-documentation-mcp-server@latest",
-            "aws_knowledge": "awslabs.aws-knowledge-mcp-server@latest",
-            "code_doc_gen": "awslabs.code-doc-gen-mcp-server@latest"
+            "dynamodb": "awslabs.dynamodb-mcp-server@latest"
         }
     
     async def setup_mcp_server(self, name: str, package: str) -> List[Any]:
@@ -140,14 +132,9 @@ You have access to real AWS services through official MCP servers."""
         """Cleanup all MCP connections"""
         for name, client in self.mcp_clients.items():
             try:
-                if hasattr(client, '__exit__'):
-                    # Use as context manager
-                    client.__exit__(None, None, None)
+                if hasattr(client, 'stop'):
+                    client.stop()
                     print(f"✅ Stopped {name} MCP client")
-                elif hasattr(client, 'close'):
-                    # Use close method if available
-                    client.close()
-                    print(f"✅ Closed {name} MCP client")
                 else:
                     print(f"✅ {name} MCP client cleanup skipped")
             except Exception as e:
