@@ -4,10 +4,10 @@ set -e
 echo "🔧 Setting up virtual environment..."
 
 # Create venv with --system-site-packages to avoid externally-managed error
-python3 -m venv --system-site-packages venv
+python3 -m venv --system-site-packages .venv
 
 # Activate venv
-source venv/bin/activate
+source .venv/bin/activate
 
 # Upgrade pip
 pip install --upgrade pip
@@ -20,4 +20,4 @@ uv tool install awslabs.cost-explorer-mcp-server@latest
 uv tool install awslabs.cloudwatch-mcp-server@latest
 uv tool install awslabs.terraform-mcp-server@latest
 
-echo "✅ Setup complete! Run: source venv/bin/activate"
+echo "✅ Setup complete! Run: source .venv/bin/activate"
