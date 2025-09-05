@@ -1,6 +1,0 @@
-Agente de Optimización de operaciones en la nube con Strands, Bedrock y MCP
-
-Gestionar costos, cumplimiento y buenas prácticas en múltiples cuentas AWS suele requerir herramientas aisladas, validaciones manuales y flujos repetitivos. En esta sesión descubrirás un agente creado con Amazon Bedrock Agent Core, Strands SDK y AWS MCP Servers que integra en un único flujo conversacional el análisis de IaC, precios, costos reales y cumplimiento. Genera reportes y PRs automáticamente, escala entre cuentas y regiones, y se amplía con validaciones de seguridad o resiliencia, reduciendo fricción, acelerando entregas y mejorando la calidad operativa.
-
-Elevator Pitch	
-Acelera entregas y reduce riesgos con un agente on-demand que transforma tareas DevOps en operaciones inteligentes. Analiza IaC, optimiza costos y valida cumplimiento en AWS desde lenguaje natural, integrando MCP Servers, Strands y Bedrock Agent Core sin pipelines rígidos.
