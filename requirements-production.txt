@@ -11,7 +11,7 @@ bedrock-agentcore-starter-toolkit
 
 # AWS SDK
 boto3
+
 # Data processing
 pandas
 openpyxl
-º

@@ -1,54 +1,75 @@
-# AWS DevOps Agent with Strands, Bedrock and Official MCP Servers
+# AWS DevOps Agent - Strands + Bedrock Agent Core
 
-Cloud operations optimization agent that transforms DevOps tasks into intelligent operations. Analyzes infrastructure, optimizes costs, and validates compliance using natural language through AWS MCP Servers, Strands SDK, and Bedrock Agent Core.
+🚀 **Production-ready AWS DevOps automation agent** using Strands framework with Bedrock Agent Core deployment, integrating official AWS MCP servers for real-time optimization, compliance, and infrastructure management.
 
-## 🎯 Key Features
+## 🎯 What This Does
 
-### Cost Optimization
-- **Real-time pricing queries**: "What's the cost of m5.large in us-east-1?"
-- **Multi-service cost analysis**: Combines pricing + usage + optimization in one query
-- **Executive reporting**: Generates C-level cost summaries with actionable insights
-- **Cross-account operations**: Scales analysis across multiple AWS accounts
+This agent transforms AWS DevOps operations into intelligent, automated processes:
 
-### Infrastructure Intelligence
-- **Natural language operations**: Ask complex questions in plain English
-- **Automated recommendations**: AI-powered cost and security optimization
-- **Compliance validation**: Checks best practices across services
-- **Multi-region analysis**: Compare costs and configurations across regions
+- **Real-time cost optimization** with AWS Pricing API integration
+- **Infrastructure as Code analysis** for Terraform and CloudFormation  
+- **Security and compliance validation** (SOC2, HIPAA, PCI-DSS, ISO27001)
+- **Multi-account AWS operations** across organizations
+- **Automated GitHub PR generation** for infrastructure improvements
 
-### Integration Benefits
-- **Official AWS MCP Servers**: Real-time data via official AWS APIs
-- **Strands SDK**: Advanced AI orchestration with tool coordination  
-- **Bedrock Agent Core**: Claude Sonnet 4 for sophisticated reasoning
-- **No rigid pipelines**: Conversational, adaptive workflows
+## ✅ Implementation Status
+
+**COMPLETED FEATURES:**
+- ✅ **Strands + Bedrock Agent Core** integration with proper configuration
+- ✅ **AWS Cost Optimization Tools** with real-time pricing via MCP
+- ✅ **IaC Analysis Tools** for Terraform and CloudFormation validation
+- ✅ **Security & Compliance Tools** supporting major standards
+- ✅ **Multi-Account Management** for organization-wide operations  
+- ✅ **GitHub Integration** with automated PR generation
+- ✅ **Comprehensive Testing** with interactive test framework
+- ✅ **Production Deployment** ready for Bedrock Agent Core
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                 Natural Language Interface             │
-│              (CLI / API / Slack / Teams)               │
-└─────────────────────┬───────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────┐
-│            Strands Agent Orchestrator                   │
-│  - Bedrock Agent Core (Claude Sonnet 4)               │
-│  - Multi-tool coordination                             │
-│  - Context management                                  │
-└─────────┬───────┬───────┬───────┬───────┬───────┬───────┘
-          │       │       │       │       │       │
-┌─────────▼┐ ┌────▼───┐ ┌─▼────┐ ┌▼────┐ ┌▼────┐ ┌▼─────┐
-│AWS MCP   │ │Cost    │ │IaC   │ │Comp │ │Git  │ │Report│
-│Pricing   │ │Explorer│ │Scan  │ │Check│ │Ops  │ │Gen   │
-│Server    │ │MCP     │ │Tools │ │Tools│ │MCP  │ │Tools │
-└──────────┘ └────────┘ └──────┘ └─────┘ └─────┘ └──────┘
-          │       │       │       │       │       │
-          ▼       ▼       ▼       ▼       ▼       ▼
-    ┌─────────────────────────────────────────────────┐
-    │              AWS APIs & Services                │
-    │  Pricing • Cost Explorer • CloudFormation      │
-    │  EC2 • S3 • RDS • CloudWatch • CodeCommit      │
-    └─────────────────────────────────────────────────┘
+Strands Framework          →         Bedrock Agent Core
+┌─────────────────────────┐          ┌─────────────────────────┐
+│ AWS DevOps Agent        │    →     │ AWS Bedrock Runtime     │
+│ ├── Cost Optimization   │          │ ├── Claude Sonnet 4     │
+│ ├── IaC Analysis        │          │ ├── HTTP API Service    │
+│ ├── Compliance Check    │          │ └── /invocations        │
+│ ├── Multi-Account Mgmt  │          └─────────────────────────┘
+│ └── GitHub Automation   │          
+└─────────────────────────┘          
+              │
+    ┌─────────▼──────────┐
+    │    AWS MCP Servers │
+    │ ├── Pricing        │
+    │ ├── DynamoDB       │
+    │ ├── Cost Explorer  │
+    │ ├── Terraform      │
+    │ ├── CloudWatch     │
+    │ └── GitHub         │
+    └────────────────────┘
+```
+
+## 📁 Project Structure
+
+```
+strands-bedrock-mcp-devops-agent/
+├── bedrock_deployment/
+│   └── aws_devops_agent_app.py      # 🚀 Main Strands + AgentCore app
+├── config/
+│   └── app_config.py                # ⚙️  Configuration management
+├── tools/aws-devops/
+│   ├── aws_cost_tools.py            # 💰 Cost optimization tools
+│   ├── aws_iac_tools.py             # 🏗️  IaC analysis tools
+│   ├── aws_compliance_tools.py      # 🔒 Security/compliance tools
+│   ├── aws_multi_account_tools.py   # 🌐 Multi-account management
+│   └── github_integration_tools.py  # 📱 GitHub PR automation
+├── tests/
+│   ├── test_aws_devops_agent.py     # 🧪 Comprehensive tests
+│   └── interactive_test.py          # 💬 Interactive testing
+├── mcp_tools/
+│   └── real_mcp_client.py           # 🔌 MCP client integration
+├── requirements.txt                 # 📦 All dependencies
+├── setup.sh                        # 🔧 Environment setup
+└── README.md                       # 📖 This file
 ```
 
 ## 🚀 Quick Start

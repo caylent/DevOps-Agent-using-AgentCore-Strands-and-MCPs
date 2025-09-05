@@ -144,6 +144,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# GitHub Personal Access Tokens and Secrets
+config/.env.github
+config/.env.*
+*.token
+.secrets/
+
 # Spyder project settings
 .spyderproject
 .spyproject

@@ -1,0 +1,43 @@
+# AWS DevOps Agent - Complete Requirements
+# Strands + Bedrock Agent Core + AWS MCP Integration
+
+# Core Strands and Bedrock dependencies
+strands-agents
+bedrock-agentcore
+bedrock-agentcore-starter-toolkit
+
+# MCP Protocol support
+mcp
+
+# AWS SDK and tools
+boto3
+botocore
+
+# Data processing and analysis
+pandas
+openpyxl
+numpy
+
+# Configuration and utilities
+python-dotenv
+pyyaml
+click
+
+# Testing framework
+pytest
+pytest-asyncio
+pytest-mock
+moto[all]  # AWS service mocking for testing
+
+# Code quality and linting
+black
+flake8
+mypy
+
+# Documentation
+mkdocs
+mkdocs-material
+
+# Development utilities
+ipython
+jupyter
