@@ -19,6 +19,7 @@ This agent transforms AWS DevOps operations into intelligent, automated processe
 - **Security and compliance validation** (SOC2, HIPAA, PCI-DSS, ISO27001)
 - **Multi-account AWS operations** across organizations
 - **Automated GitHub PR generation** for infrastructure improvements
+- **Document generation** with automatic report creation in organized folders
 
 ## ✅ Implementation Status
 

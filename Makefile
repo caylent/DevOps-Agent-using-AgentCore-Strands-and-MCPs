@@ -221,6 +221,14 @@ status: ## Show project status
 		echo "❌ uv not available (needed for MCP servers)"; \
 	fi
 	@echo ""
+	@echo "🏗️ CDK Analysis:"
+	@if command -v cdk >/dev/null 2>&1; then \
+		echo "✅ AWS CDK CLI installed: $$(cdk --version 2>/dev/null || echo 'unknown version')"; \
+	else \
+		echo "❌ AWS CDK CLI not installed (optional for CDK analysis)"; \
+		echo "💡 Install with: npm install -g aws-cdk"; \
+	fi
+	@echo ""
 	@echo "📁 Project Structure:"
 	@find . -type d -not -path "./.git*" -not -path "./bkp*" -not -path "./__pycache__*" | head -8
 	@echo ""
@@ -241,3 +249,11 @@ example-iac: ## Run IaC analysis example
 example-compliance: ## Run compliance check example
 	@echo "🔒 Running compliance check example..."
 	make query QUERY="Check my AWS infrastructure for SOC2 compliance"
+
+example-cdk: ## Run CDK analysis example
+	@echo "🏗️ Running CDK analysis example..."
+	make query QUERY="Analyze my CDK project for optimization opportunities and security issues"
+
+example-report: ## Run document generation example
+	@echo "📄 Running document generation example..."
+	make query QUERY="Generate a cost analysis report for my AWS infrastructure"

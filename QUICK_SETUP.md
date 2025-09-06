@@ -51,6 +51,18 @@ export AWS_DEFAULT_REGION=us-east-1
 # Edit .env file with your credentials
 ```
 
+## 3.5️⃣ CDK Setup (Optional - for CDK Analysis)
+```bash
+# Install AWS CDK CLI (if not already installed)
+npm install -g aws-cdk
+
+# Verify CDK installation
+cdk --version
+
+# Bootstrap CDK (if using CDK for the first time in your AWS account)
+cdk bootstrap
+```
+
 ## 4️⃣ Test MCP Integration
 ```bash
 python tests/test_mcp_integration.py
@@ -88,7 +100,8 @@ aws-devops-agent --mode interactive
 Your modern AWS DevOps Agent is ready with:
 - ✅ **Modern Python structure** (src/ layout, pyproject.toml)
 - ✅ **Real AWS MCP integration** (Cost Explorer, CloudWatch, Pricing)
-- ✅ **Organized tools** (cost, IaC, compliance, GitHub)
+- ✅ **Organized tools** (cost, IaC, compliance, GitHub, CDK)
+- ✅ **CDK Analysis** (project analysis, synthesis, optimization)
 - ✅ **Production deployment** (Bedrock Agent Core)
 - ✅ **Development tools** (pytest, black, mypy)
 
