@@ -1,6 +1,14 @@
-# AWS DevOps Agent - Strands + Bedrock Agent Core
+# AWS DevOps Agent - Modern Python Architecture
 
-🚀 **Production-ready AWS DevOps automation agent** using Strands framework with Bedrock Agent Core deployment, integrating official AWS MCP servers for real-time optimization, compliance, and infrastructure management.
+🚀 **Production-ready AWS DevOps automation agent** built with modern Python best practices, using Strands framework + Bedrock Agent Core deployment, integrating official AWS MCP servers for real-time optimization, compliance, and infrastructure management.
+
+## 🆕 **What's New in v1.0**
+- ✅ **Modern Python Structure**: src/ layout with pyproject.toml
+- ✅ **Domain-Organized Tools**: Cost, IaC, Compliance, GitHub
+- ✅ **Multiple Entry Points**: Development, production, and module modes  
+- ✅ **Industry Standards**: PEP 8 compliant, version-agnostic filenames
+- ✅ **Comprehensive Testing**: Unit, integration, and fixture support
+- ✅ **Development Tools**: Black, isort, pytest, mypy configured
 
 ## 🎯 What This Does
 
@@ -15,13 +23,15 @@ This agent transforms AWS DevOps operations into intelligent, automated processe
 ## ✅ Implementation Status
 
 **COMPLETED FEATURES:**
+- ✅ **Modern Python Architecture** with src/ layout and pyproject.toml
 - ✅ **Strands + Bedrock Agent Core** integration with proper configuration
-- ✅ **AWS Cost Optimization Tools** with real-time pricing via MCP
-- ✅ **IaC Analysis Tools** for Terraform and CloudFormation validation
-- ✅ **Security & Compliance Tools** supporting major standards
-- ✅ **Multi-Account Management** for organization-wide operations  
-- ✅ **GitHub Integration** with automated PR generation
-- ✅ **Comprehensive Testing** with interactive test framework
+- ✅ **Organized AWS Tools** by domain (cost, IaC, compliance, GitHub)
+- ✅ **Real-time MCP Integration** via official AWS MCP servers
+- ✅ **Multiple Entry Points** for development and production use
+- ✅ **Industry-Standard Structure** following Python packaging guidelines
+- ✅ **Comprehensive Testing** with unit, integration, and fixture support
+- ✅ **Development Tooling** with black, isort, pytest, mypy
+- ✅ **Environment Management** with .env.example template
 - ✅ **Production Deployment** ready for Bedrock Agent Core
 
 ## 🏗️ Architecture
@@ -48,28 +58,58 @@ Strands Framework          →         Bedrock Agent Core
     └────────────────────┘
 ```
 
-## 📁 Project Structure
+## 📁 Modern Project Structure
 
 ```
 strands-bedrock-mcp-devops-agent/
-├── bedrock_deployment/
-│   └── aws_devops_agent_app.py      # 🚀 Main Strands + AgentCore app
-├── config/
-│   └── app_config.py                # ⚙️  Configuration management
-├── tools/aws-devops/
-│   ├── aws_cost_tools.py            # 💰 Cost optimization tools
-│   ├── aws_iac_tools.py             # 🏗️  IaC analysis tools
-│   ├── aws_compliance_tools.py      # 🔒 Security/compliance tools
-│   ├── aws_multi_account_tools.py   # 🌐 Multi-account management
-│   └── github_integration_tools.py  # 📱 GitHub PR automation
-├── tests/
-│   ├── test_aws_devops_agent.py     # 🧪 Comprehensive tests
-│   └── interactive_test.py          # 💬 Interactive testing
-├── mcp_tools/
-│   └── real_mcp_client.py           # 🔌 MCP client integration
-├── requirements.txt                 # 📦 All dependencies
-├── setup.sh                        # 🔧 Environment setup
-└── README.md                       # 📖 This file
+├── main.py                          # 🚀 Main entry point
+├── pyproject.toml                   # 📦 Modern Python configuration  
+├── requirements.txt                 # 📋 Production dependencies
+├── requirements_dev.txt             # 🔧 Development dependencies
+├── .env.example                     # 🔐 Environment template
+│
+├── src/aws_devops_agent/           # 📂 Main package (modern src/ layout)
+│   ├── __init__.py
+│   ├── main.py                     # Core agent implementation
+│   ├── config/                     # ⚙️ Configuration management
+│   │   ├── __init__.py
+│   │   └── app_config.py
+│   ├── tools/                      # 🛠️ Organized AWS DevOps tools
+│   │   ├── __init__.py
+│   │   ├── aws_cost/              # 💰 Cost optimization
+│   │   │   ├── __init__.py
+│   │   │   ├── pricing.py         # AWS pricing analysis
+│   │   │   ├── optimization.py    # Cost Explorer integration
+│   │   │   ├── resources.py       # Live resource scanning
+│   │   │   └── multi_account.py   # Multi-account operations
+│   │   ├── aws_iac/               # 🏗️ Infrastructure as Code
+│   │   │   ├── __init__.py
+│   │   │   └── terraform.py       # Terraform/CloudFormation
+│   │   ├── aws_compliance/        # 🔒 Security & compliance
+│   │   │   ├── __init__.py
+│   │   │   └── security.py        # SOC2, HIPAA, PCI-DSS, ISO27001
+│   │   └── github/                # 📱 GitHub integration
+│   │       ├── __init__.py
+│   │       └── integration.py     # PR automation
+│   └── mcp_clients/               # 🔌 MCP client integration
+│       ├── __init__.py
+│       ├── mcp_client.py          # Unified MCP client
+│       ├── aws_mcp_client.py      # AWS-specific client
+│       ├── strands_mcp_client.py  # Strands-native client
+│       └── github_mcp_client.py   # GitHub MCP client
+│
+├── deployment/bedrock/             # 🚀 Production deployment
+│   └── app.py                      # Bedrock Agent Core app
+├── scripts/                       # 🔧 Setup and utility scripts
+│   ├── setup_mcp_servers.py
+│   └── setup.sh
+├── tests/                         # 🧪 Organized testing
+│   ├── unit/                      # Unit tests
+│   ├── integration/               # Integration tests
+│   └── fixtures/                  # Test fixtures
+└── docs/                          # 📚 Documentation
+    ├── APP_INFO.md
+    └── APP_USAGE.md               # 📖 Comprehensive usage guide
 ```
 
 ## 🚀 Quick Start
@@ -87,27 +127,40 @@ strands-bedrock-mcp-devops-agent/
 git clone https://github.com/your-org/strands-bedrock-mcp-devops-agent
 cd strands-bedrock-mcp-devops-agent
 
-# 2. Run setup script
-python setup.py
+# 2. Install dependencies
+pip install -r requirements.txt
 
 # 3. Install AWS MCP Servers
-uv tool install aws-pricing-mcp-server
-# More servers as they become available:
-# uv tool install aws-cost-explorer-mcp-server
-# uv tool install aws-cloudwatch-mcp-server
+uv tool install awslabs.cost-explorer-mcp-server@latest
+uv tool install awslabs.cloudwatch-mcp-server@latest
+uv tool install awslabs.aws-pricing-mcp-server@latest
+
+# 4. Configure environment
+cp .env.example .env
+# Edit .env with your AWS credentials
+
+# 5. For development (optional)
+pip install -r requirements_dev.txt
 ```
 
 ### Basic Usage
 
 ```bash
-# Start the agent
-python devops_agent.py
+# Development mode
+python main.py --mode interactive
 
-# Available commands:
-analyze                        # Full cost analysis
-compare t3.medium,m5.large    # Compare instance costs  
-pricing EC2 m5.large          # Get specific pricing
-chat                          # Natural language conversation
+# Demo scenarios  
+python main.py --mode demo
+
+# Single query
+python main.py --query "Analyze AWS costs for my infrastructure"
+
+# Production installation
+pip install -e .
+aws-devops-agent --mode interactive
+
+# Module syntax
+python -m src.aws_devops_agent.main --mode interactive
 ```
 
 ## 💬 Example Conversations
@@ -179,12 +232,30 @@ for a m5.large instance running 24/7. Include data transfer costs.
 
 ### Local Development
 ```bash
-python devops_agent.py
+# Development mode
+python main.py --mode interactive
+
+# Run tests
+pytest tests/
+
+# Code formatting
+black src/ tests/
+isort src/ tests/
+
+# Type checking  
+mypy src/
 ```
 
-### Example Demo
+### Production Deployment
 ```bash
-python example_usage.py
+# Install as package
+pip install -e .
+
+# Use CLI command
+aws-devops-agent --mode interactive
+
+# Bedrock Agent Core deployment
+python deployment/bedrock/app.py
 ```
 
 ## 🔧 Configuration
@@ -199,23 +270,46 @@ export BEDROCK_REGION=us-east-1
 ### Files Structure
 ```
 strands-bedrock-mcp-devops-agent/
-├── devops_agent.py           # Main agent implementation
-├── mcp_tools/                # MCP integration layer
-│   ├── mcp_client.py        # MCP client for AWS servers
-│   └── aws_mcp_tools.py     # Strands tools using MCP
-├── example_usage.py          # Demo and examples
-├── setup.py                  # Installation script
-├── requirements.txt          # Dependencies
-└── goal                      # Project goals and architecture
+├── devops_agent.py                                 # Main agent implementation
+├── src/aws_devops_agent/mcp_clients/               # MCP integration layer
+│   ├── mcp_client.py                               # MCP client for AWS servers
+│   └── aws_mcp_tools.py                            # Strands tools using MCP
+├── example_usage.py                                # Demo and examples
+├── setup.py                                        # Installation script
+├── requirements.txt                                # Dependencies
+└── goal                                            # Project goals and architecture
 ```
+
+## 🎯 Modern Python Best Practices
+
+This project demonstrates modern Python development standards:
+
+### **Architecture Patterns**
+- ✅ **src/ layout**: Industry-standard package structure
+- ✅ **pyproject.toml**: Modern Python configuration
+- ✅ **Domain organization**: Tools grouped by function
+- ✅ **Clean imports**: Relative imports with proper `__init__.py`
+
+### **Development Experience**
+- ✅ **Multiple entry points**: Development, production, module modes
+- ✅ **Environment management**: `.env.example` template
+- ✅ **Code quality tools**: Black, isort, pytest, mypy
+- ✅ **Comprehensive testing**: Unit, integration, fixtures
+
+### **Production Ready**
+- ✅ **Version-agnostic**: No version numbers in filenames
+- ✅ **PEP 8 compliant**: Consistent naming conventions
+- ✅ **Scalable structure**: Easy to extend and maintain
+- ✅ **CI/CD friendly**: Automated testing and deployment ready
 
 ## 🤝 Contributing
 
 This is a demonstration project for AWS re:Invent presentation. The architecture shows how to combine:
+- **Modern Python practices** with industry standards
 - **Strands SDK** for AI orchestration
 - **Official AWS MCP Servers** for real-time data
 - **Bedrock Agent Core** for sophisticated reasoning
-- **Natural language interfaces** for DevOps operations
+- **Clean architecture** for maintainable DevOps operations
 
 # AWS DevOps Agent - Production Ready
 
@@ -295,7 +389,7 @@ strands-bedrock-mcp-devops-agent/
 ├── requirements-production.txt   # Dependencias limpias
 ├── goal                         # Documentación del proyecto
 ├── ai-processing/              # Implementación original (referencia)
-└── mcp_tools/                  # Tools directory (solo __init__.py)
+└── src/aws_devops_agent/mcp_clients/                  # Tools directory (solo __init__.py)
 ```
 
 ## ⚙️ Configuración
@@ -476,7 +570,7 @@ export AWS_DEFAULT_REGION=us-east-1
 ```bash
 # Deploy comando validado
 strands deploy bedrock-agentcore \
-  --agent-file bedrock_deployment/aws_devops_agent_app.py \
+  --agent-file deployment/bedrock/app.py \
   --region us-east-1
 ```
 

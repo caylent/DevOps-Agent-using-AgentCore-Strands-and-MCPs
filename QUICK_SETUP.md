@@ -1,44 +1,149 @@
-# ⚡ QUICK SETUP - MCP Servers Ready in 2 Minutes
+# ⚡ QUICK SETUP - Modern AWS DevOps Agent Ready in 3 Minutes
 
-## 1️⃣ Install UV (if not installed)
+## 1️⃣ Install Dependencies
 ```bash
+# Install UV (if not installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
-# OR
-pip install uv
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# For development (optional)
+pip install -r requirements_dev.txt
 ```
 
-## 2️⃣ Install AWS MCP Servers (1 command)
+## 2️⃣ Setup AWS MCP Servers (Choose One)
+
+**Option A: Install for Production (Recommended)**
 ```bash
-uvx install awslabs.cost-explorer-mcp-server@latest && \
-uvx install awslabs.cloudwatch-mcp-server@latest && \
-uvx install awslabs.aws-pricing-mcp-server@latest
+# Install MCP servers globally (persistent, fast)
+make mcp-install
+
+# Check status
+make mcp-check
 ```
 
-## 3️⃣ Configure AWS Credentials (if not done)
+**Option B: Run Directly for Development**
 ```bash
+# Run MCP servers directly (no installation, always latest)
+make mcp-run
+
+# Stop when done
+make mcp-stop
+```
+
+## 3️⃣ Configure Environment
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Configure AWS credentials (choose one method):
+
+# Method 1: AWS CLI
 aws configure
-# OR set environment variables:
+
+# Method 2: Environment variables
 export AWS_ACCESS_KEY_ID=your_key
-export AWS_SECRET_ACCESS_KEY=your_secret
+export AWS_SECRET_ACCESS_KEY=your_secret  
 export AWS_DEFAULT_REGION=us-east-1
+
+# Method 3: Edit .env file
+# Edit .env file with your credentials
 ```
 
 ## 4️⃣ Test MCP Integration
 ```bash
-python test_mcp_integration.py
+python tests/test_mcp_integration.py
 ```
 
 ## 5️⃣ Run the Agent
+
+### 🚀 **EASY WAY (Recommended)**
 ```bash
-python aws_devops_agent_v2.py --mode interactive
+# Complete setup and run (BEST)
+make setup
+source .venv/bin/activate
+make run
+
+# Or step by step
+make setup            # Create venv, install deps, install MCP servers
+source .venv/bin/activate  # Activate venv
+make run              # Start the agent
+```
+
+### 🔧 **Manual Way**
+```bash
+# Development mode
+python main.py --mode interactive
+
+# Or using module syntax
+python -m src.aws_devops_agent.main --mode demo
+
+# Production installation
+pip install -e .
+aws-devops-agent --mode interactive
 ```
 
 ## ✅ Done! 
-Your AWS DevOps Agent now has real MCP integration with:
-- Real AWS Cost Explorer data
-- Real CloudWatch metrics and alarms  
-- Real AWS pricing information
-- Official MCP Python SDK
+Your modern AWS DevOps Agent is ready with:
+- ✅ **Modern Python structure** (src/ layout, pyproject.toml)
+- ✅ **Real AWS MCP integration** (Cost Explorer, CloudWatch, Pricing)
+- ✅ **Organized tools** (cost, IaC, compliance, GitHub)
+- ✅ **Production deployment** (Bedrock Agent Core)
+- ✅ **Development tools** (pytest, black, mypy)
+
+## 📖 Next Steps
+- **Learn how to use it**: See [docs/APP_USAGE.md](docs/APP_USAGE.md) for comprehensive examples
+- **Explore capabilities**: Run `make dev` to see demo scenarios
+- **Start optimizing**: Run `make run` and ask about your AWS costs
+
+## 🚀 Available Commands
+
+### **Makefile Commands (Simplified)**
+```bash
+# Main Commands (PRIORITIZED)
+make run               # Start interactive mode - MAIN COMMAND
+make dev               # Start demo mode
+make query QUERY="your query"  # Single query
+
+# Setup & Installation
+make setup             # Complete setup: create venv, install deps, install MCP servers
+make install           # Install dependencies only (if venv exists)
+
+# Development & Testing
+make test              # Run all tests
+make format            # Format code
+
+# MCP Server Management
+make mcp-check         # Check if MCP servers are installed
+make mcp-install       # Install AWS MCP servers
+make mcp-test          # Test MCP server connections
+
+# Deployment & Utilities
+make deploy            # Deploy to Bedrock Agent Core
+make clean             # Clean up temporary files and virtual environment
+make status            # Show project status
+
+# Examples
+make example-cost      # Run cost analysis example
+make example-iac       # Run IaC analysis example
+make example-compliance # Run compliance check example
+```
+
+### **Manual Commands**
+```bash
+# Interactive mode
+python main.py --mode interactive
+
+# Demo scenarios
+python main.py --mode demo
+
+# Single query
+python main.py --query "Analyze AWS costs for my infrastructure"
+
+# Production mode
+aws-devops-agent --mode interactive
+```
 
 ## 🔧 IAM Permissions Needed:
 ```json
@@ -49,11 +154,13 @@ Your AWS DevOps Agent now has real MCP integration with:
             "Effect": "Allow",
             "Action": [
                 "ce:GetCostAndUsage",
-                "ce:GetForecast",
+                "ce:GetForecast", 
                 "cloudwatch:GetMetricData",
                 "cloudwatch:DescribeAlarms",
                 "logs:StartQuery",
-                "logs:GetQueryResults"
+                "logs:GetQueryResults",
+                "pricing:GetProducts",
+                "pricing:DescribeServices"
             ],
             "Resource": "*"
         }
@@ -61,4 +168,11 @@ Your AWS DevOps Agent now has real MCP integration with:
 }
 ```
 
-That's it! 🎯
+## 🎯 What's New
+- **No version numbers** in filenames (maintainable)
+- **Domain-organized tools** (easy to navigate)
+- **Modern Python packaging** (industry standard)
+- **Multiple entry points** (development & production)
+- **Comprehensive testing** (unit, integration, fixtures)
+
+That's it! 🎉

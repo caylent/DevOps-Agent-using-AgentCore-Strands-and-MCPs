@@ -13,7 +13,15 @@ from strands import tool
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
-from mcp_client import mcp_client
+import sys
+from pathlib import Path
+# MCP clients are now in the same package structure
+
+try:
+    from ...mcp_clients.mcp_client import mcp_client
+except ImportError:
+    print("Warning: MCP client not available, using mock data")
+    mcp_client = None
 
 
 @tool

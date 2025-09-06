@@ -9,10 +9,10 @@ import sys
 import os
 
 # Add path for our tools
-sys.path.append(os.path.join(os.path.dirname(__file__), "tools", "aws-devops"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
 
 try:
-    from mcp_client import mcp_client
+    from aws_devops_agent.mcp_clients.mcp_client import mcp_client
     print("✅ MCP client imported successfully")
 except ImportError as e:
     print(f"❌ Failed to import MCP client: {e}")
@@ -80,17 +80,17 @@ def test_import_structure():
     print("\n📦 Testing Import Structure")
     print("=" * 30)
     
-    # Test Cost Explorer tools import
+    # Test Cost tools import
     try:
-        from aws_cost_explorer_tools import get_actual_aws_costs, get_cost_forecast_mcp
-        print("✅ Cost Explorer tools imported successfully")
+        from aws_devops_agent.tools.aws_cost.optimization import get_actual_aws_costs, get_cost_forecast_mcp
+        print("✅ Cost tools imported successfully")
     except ImportError as e:
-        print(f"❌ Failed to import Cost Explorer tools: {e}")
+        print(f"❌ Failed to import Cost tools: {e}")
         return False
     
     # Test Live Resources tools import  
     try:
-        from aws_live_resources_tools import scan_live_aws_resources, analyze_unused_resources
+        from aws_devops_agent.tools.aws_cost.resources import scan_live_aws_resources, analyze_unused_resources
         print("✅ Live Resources tools imported successfully")
     except ImportError as e:
         print(f"❌ Failed to import Live Resources tools: {e}")
