@@ -3,8 +3,10 @@
 # Import all tools for easy access
 from .aws_cost import *
 from .aws_iac import *
+from .aws_cdk import *
 from .aws_compliance import *
 from .github import *
+from .reporting import *
 
 __all__ = [
     # Cost tools
@@ -34,6 +36,12 @@ __all__ = [
     "scan_infrastructure_drift",
     "generate_iac_best_practices_report",
     
+    # CDK tools
+    "analyze_cdk_project",
+    "synthesize_cdk_project",
+    "analyze_cdk_synthesized_output",
+    "generate_cdk_optimization_report",
+    
     # Compliance tools
     "validate_security_policies",
     "check_compliance_standards",
@@ -44,5 +52,14 @@ __all__ = [
     "create_optimization_pull_request",
     "update_iac_via_github",
     "list_infrastructure_repositories",
-    "monitor_infrastructure_prs"
+    "monitor_infrastructure_prs",
+    
+    # Reporting tools
+    "generate_document",
+    "generate_cost_analysis_document",
+    "generate_security_compliance_document", 
+    "generate_infrastructure_document",
+    "generate_cdk_analysis_document",
+    "list_generated_documents",
+    "get_document_info"
 ]

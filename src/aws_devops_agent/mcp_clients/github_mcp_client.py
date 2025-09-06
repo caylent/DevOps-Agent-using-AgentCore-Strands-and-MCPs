@@ -50,9 +50,12 @@ def create_github_issue(repo: str, title: str, body: str, labels: List[str] = No
 
 @tool
 def create_pull_request(repo: str, title: str, body: str, head_branch: str, 
-                       base_branch: str = "main") -> Dict[str, Any]:
+                       base_branch: str = "main", user_consent: bool = False) -> Dict[str, Any]:
     """
     Create a GitHub Pull Request with terraform fixes or optimizations
+    
+    ⚠️  CRITICAL: This function requires explicit user consent!
+    ⚠️  NEVER call this function without user_consent=True
     
     Args:
         repo: Repository name (owner/repo format) 
@@ -60,11 +63,21 @@ def create_pull_request(repo: str, title: str, body: str, head_branch: str,
         body: PR body with description of changes
         head_branch: Source branch with changes
         base_branch: Target branch (default: main)
+        user_consent: MUST be True to proceed (safety requirement)
     
     Returns:
         Dict with PR creation result
     """
     try:
+        # CRITICAL SAFETY CHECK - Require explicit user consent
+        if not user_consent:
+            return {
+                "status": "error",
+                "error": "CRITICAL: User consent required! This function cannot create PRs without explicit user approval.",
+                "safety_message": "To create a PR, the user must explicitly approve this action. Use user_consent=True parameter.",
+                "recommendation": "Ask the user: 'Do you want me to create a pull request with these changes? Please confirm with explicit approval.'"
+            }
+        
         return {
             "status": "success", 
             "action": "create_pull_request",
@@ -77,7 +90,7 @@ def create_pull_request(repo: str, title: str, body: str, head_branch: str,
                 "url": f"https://github.com/{repo}/pull/456",
                 "number": 456
             },
-            "note": "Mock response - would create real PR with GitHub MCP server"
+            "note": "Mock response - would create real PR with GitHub MCP server (User approved)"
         }
         
     except Exception as e:
@@ -185,18 +198,31 @@ resource "aws_s3_bucket" "example" {
 
 
 @tool
-def create_terraform_security_pr(repo: str, terraform_issues: List[Dict]) -> Dict[str, Any]:
+def create_terraform_security_pr(repo: str, terraform_issues: List[Dict], user_consent: bool = False) -> Dict[str, Any]:
     """
     Create a comprehensive PR with Terraform security fixes
+    
+    ⚠️  CRITICAL: This function requires explicit user consent!
+    ⚠️  NEVER call this function without user_consent=True
     
     Args:
         repo: Repository name (owner/repo format)
         terraform_issues: List of security issues found
+        user_consent: MUST be True to proceed (safety requirement)
     
     Returns:
         Dict with PR creation workflow result
     """
     try:
+        # CRITICAL SAFETY CHECK - Require explicit user consent
+        if not user_consent:
+            return {
+                "status": "error",
+                "error": "CRITICAL: User consent required! This function cannot create security PRs without explicit user approval.",
+                "safety_message": "To create a security PR, the user must explicitly approve this action. Use user_consent=True parameter.",
+                "recommendation": "Ask the user: 'Do you want me to create a pull request with these security fixes? Please confirm with explicit approval.'"
+            }
+        
         # Generate PR content based on issues
         issue_summary = []
         fixes_applied = []
@@ -227,7 +253,7 @@ def create_terraform_security_pr(repo: str, terraform_issues: List[Dict]) -> Dic
 - [x] Checkov security scan passed
 - [ ] Manual review required
 
-🤖 This PR was generated automatically by the DevOps Agent based on security analysis.
+🤖 This PR was prepared by the DevOps Agent with explicit user approval for security analysis.
 
 **Review carefully before merging!**
         """.strip()
