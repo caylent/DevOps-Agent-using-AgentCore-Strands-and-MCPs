@@ -4,6 +4,7 @@
 from .aws_cost import *
 from .aws_iac import *
 from .aws_cdk import *
+from .aws_terraform import *
 from .aws_compliance import *
 from .github import *
 from .reporting import *
@@ -42,6 +43,13 @@ __all__ = [
     "analyze_cdk_synthesized_output",
     "generate_cdk_optimization_report",
     
+    # Terraform tools
+    "analyze_terraform_project",
+    "validate_terraform_configuration",
+    "plan_terraform_changes",
+    "analyze_terraform_state",
+    "generate_terraform_optimization_report",
+    
     # Compliance tools
     "validate_security_policies",
     "check_compliance_standards",
@@ -60,6 +68,7 @@ __all__ = [
     "generate_security_compliance_document", 
     "generate_infrastructure_document",
     "generate_cdk_analysis_document",
+    "generate_terraform_analysis_document",
     "list_generated_documents",
     "get_document_info"
 ]

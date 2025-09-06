@@ -366,6 +366,70 @@ def generate_cdk_analysis_document(
 
 
 @tool
+def generate_terraform_analysis_document(
+    terraform_data: Dict[str, Any],
+    title: str = "Terraform Analysis Report",
+    filename: str = None
+) -> Dict[str, Any]:
+    """
+    Generate a comprehensive Terraform analysis document
+    
+    Args:
+        terraform_data: Terraform analysis data from Terraform tools
+        title: Document title
+        filename: Custom filename (auto-generated if None)
+    
+    Returns:
+        Dict containing document generation results
+    """
+    try:
+        # Prepare structured Terraform analysis document
+        document_content = {
+            "executive_summary": terraform_data.get("executive_summary", {}),
+            "project_analysis": terraform_data.get("project_info", {}),
+            "security_analysis": terraform_data.get("security", {}),
+            "cost_optimization": terraform_data.get("cost_optimization", {}),
+            "best_practices": terraform_data.get("best_practices", {}),
+            "recommendations": terraform_data.get("recommendations", []),
+            "next_steps": terraform_data.get("next_steps", []),
+            "analysis_timestamp": terraform_data.get("analysis_timestamp", datetime.now().isoformat())
+        }
+        
+        # Generate filename if not provided
+        if not filename:
+            safe_title = "".join(c for c in title if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            safe_title = safe_title.replace(' ', '_').lower()
+            filename = f"{safe_title}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        # Generate the document
+        result = generate_document(
+            content=document_content,
+            title=title,
+            document_type="terraform",
+            format="markdown",
+            filename=filename
+        )
+        
+        if result["status"] == "success":
+            return {
+                "status": "success",
+                "message": f"Terraform analysis document generated successfully",
+                "file_path": result["file_path"],
+                "document_type": "terraform",
+                "title": title,
+                "filename": filename
+            }
+        else:
+            return result
+            
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": f"Terraform analysis document generation failed: {str(e)}"
+        }
+
+
+@tool
 def list_generated_documents(
     document_type: str = None,
     limit: int = 20

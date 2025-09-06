@@ -1,0 +1,2 @@
+# This file ensures the terraform-analysis directory is tracked by Git
+# Terraform analysis reports will be generated in this directory
