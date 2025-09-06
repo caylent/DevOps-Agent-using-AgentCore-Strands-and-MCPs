@@ -8,46 +8,19 @@ import sys
 import os
 from pathlib import Path
 
-# Add project paths
-project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root / "config"))
-sys.path.append(str(project_root / "tools" / "aws-devops"))
+# Add project paths for modern src/ layout
+project_root = Path(__file__).parent.parent.parent
+src_path = project_root / "src"
+sys.path.insert(0, str(src_path))
 
 from strands import Agent
 from bedrock_agentcore.runtime import BedrockAgentCoreApp
 
-# Import our AWS DevOps tools
-from aws_cost_tools import (
-    get_real_aws_pricing,
-    analyze_cost_optimization_opportunities,
-    generate_cost_comparison_report,
-    calculate_reserved_instance_savings,
-)
-from aws_iac_tools import (
-    analyze_terraform_configuration,
-    validate_cloudformation_template,
-    scan_infrastructure_drift,
-    generate_iac_best_practices_report,
-)
-from aws_compliance_tools import (
-    validate_security_policies,
-    check_compliance_standards,
-    generate_compliance_report,
-    scan_security_vulnerabilities,
-)
-from aws_multi_account_tools import (
-    list_cross_account_resources,
-    execute_cross_account_operation,
-    generate_multi_account_report,
-)
-from github_integration_tools import (
-    create_optimization_pull_request,
-    update_iac_via_github,
-    list_infrastructure_repositories,
-)
+# Import our AWS DevOps tools from new structure
+from aws_devops_agent.tools import *
+from aws_devops_agent.config import get_config
 
 try:
-    from config.app_config import get_config
     config = get_config()
     model_id = config.model.model_id
 except ImportError:
@@ -63,6 +36,21 @@ agent = Agent(
         analyze_cost_optimization_opportunities,
         generate_cost_comparison_report,
         calculate_reserved_instance_savings,
+        
+        # Cost Explorer Tools (Real AWS Data)
+        get_actual_aws_costs,
+        analyze_cost_trends_real,
+        get_multi_account_cost_breakdown,
+        get_rightsizing_recommendations,
+        get_reserved_instance_recommendations,
+        get_cost_forecast_mcp,
+        compare_cost_periods_mcp,
+        
+        # Live Resources Tools
+        scan_live_aws_resources,
+        analyze_unused_resources,
+        get_resource_utilization_metrics,
+        discover_cross_account_resources,
         
         # Infrastructure as Code Tools
         analyze_terraform_configuration,
@@ -80,59 +68,65 @@ agent = Agent(
         list_cross_account_resources,
         execute_cross_account_operation,
         generate_multi_account_report,
+        monitor_cross_account_compliance,
         
         # GitHub Integration Tools
         create_optimization_pull_request,
         update_iac_via_github,
         list_infrastructure_repositories,
+        monitor_infrastructure_prs,
     ],
-    system_prompt="""You are an AWS DevOps Agent specialist deployed on Bedrock Agent Core with access to real AWS APIs via MCP servers.
+    system_prompt="""Eres un especialista en AWS DevOps desplegado en Bedrock Agent Core con acceso completo a APIs reales de AWS via servidores MCP.
 
-Your core capabilities:
-- Real-time AWS cost analysis and optimization recommendations
-- Infrastructure as Code (IaC) analysis for Terraform and CloudFormation
-- Security compliance validation and reporting
-- Multi-account and multi-region operations
-- Automated Pull Request generation for infrastructure improvements
+TUS CAPACIDADES PRINCIPALES:
+💰 OPTIMIZACIÓN DE COSTOS:
+- Análisis de precios en tiempo real via AWS Pricing API
+- Acceso REAL a AWS Cost Explorer con datos de facturación actuales
+- Análisis de tendencias y breakdowns multi-cuenta via Cost Explorer API
+- Recomendaciones de rightsizing y Reserved Instances basadas en datos reales
+- Escaneo de recursos vivos para identificar recursos sin usar
+- Métricas de utilización en tiempo real de todos los servicios AWS
 
-WORKFLOW FOR COST OPTIMIZATION:
-1. Use get_real_aws_pricing to fetch current AWS pricing data
-2. Use analyze_cost_optimization_opportunities to identify savings
-3. Use calculate_reserved_instance_savings for RI recommendations
-4. Use generate_cost_comparison_report for comprehensive analysis
-5. Use create_optimization_pull_request to propose infrastructure changes
+🏗️ ANÁLISIS DE INFRAESTRUCTURA COMO CÓDIGO (IaC):
+- Validación de configuraciones Terraform y CloudFormation
+- Detección de drift entre código y estado real
+- Best practices y recomendaciones de seguridad
+- Análisis de cumplimiento de estándares
 
-WORKFLOW FOR IAC ANALYSIS:
-1. Use analyze_terraform_configuration for Terraform analysis
-2. Use validate_cloudformation_template for CloudFormation analysis
-3. Use scan_infrastructure_drift to detect configuration drift
-4. Use generate_iac_best_practices_report for recommendations
-5. Use update_iac_via_github to implement fixes via PR
+🔒 SEGURIDAD Y COMPLIANCE:
+- Validación contra estándares SOC2, HIPAA, PCI-DSS, ISO27001
+- Escaneo de vulnerabilidades de seguridad
+- Análisis de políticas y configuraciones
+- Reportes de compliance ejecutivos
 
-WORKFLOW FOR COMPLIANCE:
-1. Use validate_security_policies to check security configurations
-2. Use check_compliance_standards for industry standards (SOC2, HIPAA, etc.)
-3. Use scan_security_vulnerabilities for security issues
-4. Use generate_compliance_report for comprehensive compliance status
+🌐 GESTIÓN MULTI-CUENTA:
+- Operaciones cross-account en organizaciones AWS
+- Inventario de recursos en múltiples cuentas y regiones
+- Análisis de costos organizacional
+- Monitoreo de compliance centralizado
 
-MULTI-ACCOUNT OPERATIONS:
-1. Use list_cross_account_resources to view resources across accounts
-2. Use execute_cross_account_operation for cross-account actions
-3. Use generate_multi_account_report for organization-wide analysis
+📱 INTEGRACIÓN GITHUB:
+- Generación automática de Pull Requests con optimizaciones
+- Gestión de repositorios de infraestructura
+- Automatización de CI/CD para IaC
+- Monitoring de PRs de infraestructura
 
-DATA SOURCE TRANSPARENCY:
-- Always specify that data comes from real AWS APIs via MCP servers
-- Include current pricing, real cost data, and live infrastructure state
-- Provide specific, actionable recommendations with cost implications
-- Generate automated PRs for infrastructure improvements
+FLUJO DE TRABAJO CONVERSACIONAL:
+1. Analiza la consulta del usuario en español/inglés
+2. Determina qué herramientas usar y en qué secuencia
+3. Ejecuta análisis usando datos reales de AWS via MCP
+4. Combina resultados en una respuesta integral
+5. Genera PRs automáticos cuando sea apropiado
+6. Proporciona next steps accionables
 
-RESPONSE FORMAT:
-- Provide clear, executive-summary style reports
-- Include cost savings opportunities with dollar amounts
-- Show before/after comparisons for optimizations
-- Generate actionable next steps with PR links when applicable
+IMPORTANTE:
+- Siempre especifica que los datos provienen de APIs reales de AWS via MCP servers
+- Incluye números específicos y ahorros en dólares
+- Genera PRs automáticamente para cambios seguros
+- Proporciona executive summaries para stakeholders
+- Mantén foco en ROI y value delivery
 
-You integrate with real AWS services and provide production-ready DevOps automation.""",
+Responde de manera concisa pero completa, integrando múltiples fuentes de datos en un análisis coherente.""",
     name="AWS DevOps Agent",
     description="Production AWS DevOps agent for cost optimization, IaC analysis, compliance validation, and automated infrastructure improvements",
 )
@@ -195,6 +189,8 @@ def invoke(payload):
 if __name__ == "__main__":
     print("🚀 Starting AWS DevOps Agent")
     print(f"🤖 Agent: {agent.name}")
-    print("🔧 Tools: Cost optimization, IaC analysis, compliance validation, multi-account operations")
+    print("🔧 Modern Structure: src/ layout with domain-organized tools")
+    print("💰 Tools: Cost optimization, IaC analysis, compliance validation, multi-account operations")
+    print("🔌 MCP Integration: Real AWS APIs via official MCP servers")
     print("🌐 Starting Bedrock Agent Core app...")
     app.run()

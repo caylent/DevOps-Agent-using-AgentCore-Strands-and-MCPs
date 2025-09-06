@@ -11,15 +11,15 @@ from pathlib import Path
 
 # Add project paths
 project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root / "config"))
-sys.path.append(str(project_root / "tools" / "aws-devops"))
+src_path = project_root / "src"
+sys.path.insert(0, str(src_path))
 
-from config.app_config import get_config
-from tools.aws_cost_tools import get_real_aws_pricing, analyze_cost_optimization_opportunities
-from tools.aws_iac_tools import analyze_terraform_configuration, scan_infrastructure_drift
-from tools.aws_compliance_tools import validate_security_policies, check_compliance_standards
-from tools.aws_multi_account_tools import list_cross_account_resources
-from tools.github_integration_tools import create_optimization_pull_request
+from aws_devops_agent.config import get_config
+from aws_devops_agent.tools.aws_cost.pricing import get_real_aws_pricing, analyze_cost_optimization_opportunities
+from aws_devops_agent.tools.aws_iac.terraform import analyze_terraform_configuration, scan_infrastructure_drift
+from aws_devops_agent.tools.aws_compliance.security import validate_security_policies, check_compliance_standards
+from aws_devops_agent.tools.aws_cost.multi_account import list_cross_account_resources
+from aws_devops_agent.tools.github.integration import create_optimization_pull_request
 
 
 class InteractiveAWSDevOpsTest:

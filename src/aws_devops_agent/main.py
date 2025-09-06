@@ -10,61 +10,12 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Any
 
-# Add paths for our tools
-project_root = Path(__file__).parent
-sys.path.append(str(project_root / "config"))
-sys.path.append(str(project_root / "tools" / "aws-devops"))
-
 # Import Strands and configuration
 from strands import Agent
-from app_config import get_config
+from .config import get_config
 
 # Import all our AWS DevOps tools
-from aws_cost_tools import (
-    get_real_aws_pricing,
-    analyze_cost_optimization_opportunities,
-    generate_cost_comparison_report,
-    calculate_reserved_instance_savings
-)
-from aws_cost_explorer_tools import (
-    get_actual_aws_costs,
-    analyze_cost_trends_real,
-    get_multi_account_cost_breakdown,
-    get_rightsizing_recommendations,
-    get_reserved_instance_recommendations,
-    get_cost_forecast_mcp,
-    compare_cost_periods_mcp
-)
-from aws_live_resources_tools import (
-    scan_live_aws_resources,
-    analyze_unused_resources,
-    get_resource_utilization_metrics,
-    discover_cross_account_resources
-)
-from aws_iac_tools import (
-    analyze_terraform_configuration,
-    validate_cloudformation_template,
-    scan_infrastructure_drift,
-    generate_iac_best_practices_report
-)
-from aws_compliance_tools import (
-    validate_security_policies,
-    check_compliance_standards,
-    generate_compliance_report,
-    scan_security_vulnerabilities
-)
-from aws_multi_account_tools import (
-    list_cross_account_resources,
-    execute_cross_account_operation,
-    generate_multi_account_report,
-    monitor_cross_account_compliance
-)
-from github_integration_tools import (
-    create_optimization_pull_request,
-    update_iac_via_github,
-    list_infrastructure_repositories,
-    monitor_infrastructure_prs
-)
+from .tools import *
 
 
 class AWSDevOpsAgentV2:

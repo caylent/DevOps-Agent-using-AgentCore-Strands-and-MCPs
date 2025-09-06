@@ -13,21 +13,20 @@ import sys
 
 # Add project paths for testing
 project_root = Path(__file__).parent.parent
-sys.path.append(str(project_root / "config"))
-sys.path.append(str(project_root / "tools" / "aws-devops"))
-sys.path.append(str(project_root / "bedrock_deployment"))
+src_path = project_root / "src"
+sys.path.insert(0, str(src_path))
 
-from config.app_config import ConfigManager, get_config
-from tools.aws_cost_tools import (
+from aws_devops_agent.config import ConfigManager, get_config
+from aws_devops_agent.tools.aws_cost.pricing import (
     get_real_aws_pricing,
     analyze_cost_optimization_opportunities,
     calculate_reserved_instance_savings
 )
-from tools.aws_iac_tools import (
+from aws_devops_agent.tools.aws_iac.terraform import (
     analyze_terraform_configuration,
     validate_cloudformation_template
 )
-from tools.aws_compliance_tools import (
+from aws_devops_agent.tools.aws_compliance.security import (
     validate_security_policies,
     check_compliance_standards
 )
@@ -374,7 +373,7 @@ class TestBedrockAgentCoreIntegration:
         mock_app.return_value = mock_app_instance
         
         # Import and test (would need actual implementation when dependencies are available)
-        # from bedrock_deployment.aws_devops_agent_app import agent, app
+        # from deployment/bedrock.aws_devops_agent_app import agent, app
         
         # For now, just verify mocks are set up correctly
         assert mock_agent is not None

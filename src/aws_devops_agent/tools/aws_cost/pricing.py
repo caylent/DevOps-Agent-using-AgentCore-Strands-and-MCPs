@@ -13,13 +13,13 @@ from strands import tool
 # Import MCP client for real AWS data
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).parent.parent.parent / "mcp_tools"))
+# MCP clients are now in the same package structure
 
 try:
-    from real_mcp_client import RealMCPClient
+    from ...mcp_clients.mcp_client import mcp_client
 except ImportError:
-    print("Warning: RealMCPClient not available, using mock data")
-    RealMCPClient = None
+    print("Warning: MCP client not available, using mock data")
+    mcp_client = None
 
 
 @tool
@@ -36,16 +36,25 @@ def get_real_aws_pricing(service: str, instance_type: str = None, region: str = 
         Dict containing real AWS pricing data from Pricing API
     """
     try:
-        if RealMCPClient:
+        if mcp_client:
             # Use real MCP client for live AWS pricing
-            mcp_client = RealMCPClient()
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            result = loop.run_until_complete(
-                mcp_client.query_aws_pricing_real(service, instance_type, region)
-            )
-            loop.close()
+            pricing_client = mcp_client.get_pricing_client()
+            if pricing_client:
+                with pricing_client:
+                    # Use Strands MCP pattern to get pricing data
+                    tools = pricing_client.list_tools_sync()
+                    # Find pricing tool and call it
+                    for tool in tools:
+                        if hasattr(tool, 'name') and 'pricing' in tool.name.lower():
+                            result = pricing_client.call_tool_sync(
+                                tool_use_id="pricing-query",
+                                name=tool.name,
+                                arguments={
+                                    "service": service,
+                                    "instance_type": instance_type,
+                                    "region": region
+                                }
+                            )
             
             if result.get("status") == "success":
                 return {

@@ -3,7 +3,11 @@
 
 import sys
 sys.path.append('.')
-from tools.aws_devops.mcp_client_v2 import get_mcp_client
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
+
+from aws_devops_agent.mcp_clients.strands_mcp_client import StrandsMCPClient
 
 def test_strands_mcp():
     """Test Strands MCP client integration"""
