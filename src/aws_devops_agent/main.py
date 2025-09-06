@@ -79,6 +79,13 @@ class AWSDevOpsAgentV2:
             analyze_cdk_synthesized_output,
             generate_cdk_optimization_report,
             
+            # Terraform Analysis Tools
+            analyze_terraform_project,
+            validate_terraform_configuration,
+            plan_terraform_changes,
+            analyze_terraform_state,
+            generate_terraform_optimization_report,
+            
             # Compliance and Security Tools
             validate_security_policies,
             check_compliance_standards,
@@ -103,6 +110,7 @@ class AWSDevOpsAgentV2:
             generate_security_compliance_document,
             generate_infrastructure_document,
             generate_cdk_analysis_document,
+            generate_terraform_analysis_document,
             list_generated_documents,
             get_document_info,
         ]
@@ -126,6 +134,7 @@ TUS CAPACIDADES PRINCIPALES:
 🏗️ ANÁLISIS DE INFRAESTRUCTURA COMO CÓDIGO (IaC):
 - Validación de configuraciones Terraform y CloudFormation
 - Análisis completo de proyectos AWS CDK (síntesis y optimización)
+- Análisis completo de proyectos Terraform (validación, planificación y optimización)
 - Detección de drift entre código y estado real
 - Best practices y recomendaciones de seguridad
 - Análisis de cumplimiento de estándares
@@ -257,6 +266,7 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
         print("• 'Check security compliance for my EC2 instances'")
         print("• 'Compare pricing between us-east-1 and eu-west-1'")
         print("• 'Analyze my CDK project for optimization opportunities'")
+        print("• 'Analyze my Terraform project for cost optimization'")
         print("• 'Generate a cost analysis report'")
         print("• 'Create a security compliance document'")
         print("• Type 'exit' to quit")
@@ -328,10 +338,10 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
             "agent_ready": self.agent is not None,
             "model": self.config.model.model_id,
             "aws_region": self.config.aws_region,
-            "tools_count": 42,  # Total tools available (20 + 11 MCP AWS tools + 4 CDK tools + 7 reporting tools)
+            "tools_count": 48,  # Total tools available (20 + 11 MCP AWS tools + 4 CDK tools + 5 Terraform tools + 8 reporting tools)
             "capabilities": [
                 "Cost optimization",
-                "IaC analysis", 
+                "IaC analysis (Terraform, CloudFormation, CDK)", 
                 "Security compliance",
                 "Multi-account operations",
                 "GitHub integration"

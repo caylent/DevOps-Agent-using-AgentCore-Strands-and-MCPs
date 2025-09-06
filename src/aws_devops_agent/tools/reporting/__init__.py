@@ -11,6 +11,7 @@ __all__ = [
     "generate_security_compliance_document",
     "generate_infrastructure_document",
     "generate_cdk_analysis_document",
+    "generate_terraform_analysis_document",
     "list_generated_documents",
     "get_document_info"
 ]

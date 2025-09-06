@@ -162,6 +162,14 @@ test: ## Run all tests
 		python3 -m pytest tests/ -v; \
 	fi
 
+test-terraform: ## Run Terraform tests
+	@echo "🏗️ Running Terraform tests..."
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		python -m pytest tests/terraform/ -v; \
+	else \
+		python3 -m pytest tests/terraform/ -v; \
+	fi
+
 format: ## Format code
 	@echo "🎨 Formatting code..."
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
@@ -221,12 +229,16 @@ status: ## Show project status
 		echo "❌ uv not available (needed for MCP servers)"; \
 	fi
 	@echo ""
-	@echo "🏗️ CDK Analysis:"
-	@if command -v cdk >/dev/null 2>&1; then \
-		echo "✅ AWS CDK CLI installed: $$(cdk --version 2>/dev/null || echo 'unknown version')"; \
+	@echo "🏗️  Infrastructure Tools:"
+	@if command -v terraform >/dev/null 2>&1; then \
+		echo "✅ Terraform CLI: $(shell terraform version -json | jq -r '.terraform_version' 2>/dev/null || echo 'Available')"; \
 	else \
-		echo "❌ AWS CDK CLI not installed (optional for CDK analysis)"; \
-		echo "💡 Install with: npm install -g aws-cdk"; \
+		echo "❌ Terraform CLI: Not installed (optional for Terraform analysis)"; \
+	fi
+	@if command -v cdk >/dev/null 2>&1; then \
+		echo "✅ AWS CDK CLI: $(shell cdk --version 2>/dev/null || echo 'Available')"; \
+	else \
+		echo "❌ AWS CDK CLI: Not installed (optional for CDK analysis)"; \
 	fi
 	@echo ""
 	@echo "📁 Project Structure:"
@@ -253,6 +265,10 @@ example-compliance: ## Run compliance check example
 example-cdk: ## Run CDK analysis example
 	@echo "🏗️ Running CDK analysis example..."
 	make query QUERY="Analyze my CDK project for optimization opportunities and security issues"
+
+example-terraform: ## Run Terraform analysis example
+	@echo "🏗️ Running Terraform analysis example..."
+	make query QUERY="Analyze my Terraform project for cost optimization and security issues"
 
 example-report: ## Run document generation example
 	@echo "📄 Running document generation example..."

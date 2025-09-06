@@ -26,6 +26,7 @@ class ReportGenerator:
             "security": self.reports_dir / "security-compliance", 
             "iac": self.reports_dir / "infrastructure-as-code",
             "cdk": self.reports_dir / "cdk-analysis",
+            "terraform": self.reports_dir / "terraform-analysis",
             "compliance": self.reports_dir / "compliance-reports",
             "multi-account": self.reports_dir / "multi-account",
             "general": self.reports_dir / "general"
