@@ -161,14 +161,18 @@ if [[ -f "$TEMPLATE_PATH" ]]; then
   
   # Use AI description if available, otherwise use last commit body
   if [[ "$AI_DESCRIPTION" != "<!-- AI description generation failed, using fallback -->" ]]; then
-    # Escape special characters for sed
-    ESCAPED_AI_DESC=$(printf '%s\n' "$AI_DESCRIPTION" | sed 's/[[\.*^$()+?{|]/\\&/g')
-    sed -i "s/<!-- Describe what this PR does and why -->/$ESCAPED_AI_DESC/" "$TMP_BODY"
+    # Use a temp file to avoid sed escaping issues
+    echo "$AI_DESCRIPTION" > /tmp/ai_desc.txt
+    sed -i '/<!-- Describe what this PR does and why -->/r /tmp/ai_desc.txt' "$TMP_BODY"
+    sed -i '/<!-- Describe what this PR does and why -->/d' "$TMP_BODY"
+    rm -f /tmp/ai_desc.txt
     echo "✅ Descripción inteligente generada con éxito"
   elif [[ -n "$LAST_COMMIT_BODY" ]]; then
     # Fallback to last commit body
-    ESCAPED_BODY=$(printf '%s\n' "$LAST_COMMIT_BODY" | sed 's/[[\.*^$()+?{|]/\\&/g')
-    sed -i "s/<!-- Describe what this PR does and why -->/$ESCAPED_BODY/" "$TMP_BODY"
+    echo "$LAST_COMMIT_BODY" > /tmp/commit_body.txt
+    sed -i '/<!-- Describe what this PR does and why -->/r /tmp/commit_body.txt' "$TMP_BODY"
+    sed -i '/<!-- Describe what this PR does and why -->/d' "$TMP_BODY"
+    rm -f /tmp/commit_body.txt
     echo "⚠️  Usando descripción del último commit como fallback"
   else
     echo "⚠️  No se pudo generar descripción automática"
