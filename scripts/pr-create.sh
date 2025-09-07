@@ -10,7 +10,7 @@ fi
 
 # Config
 BASE_BRANCH="${BASE_BRANCH:-dev}"
-PR_TITLE="${PR_TITLE:-$(git rev-parse --abbrev-ref HEAD)}"   # o usa el último commit: git log -1 --pretty=%s
+PR_TITLE="${PR_TITLE:-$(git log -1 --pretty=%s)}"
 TEMPLATE_PATH="${TEMPLATE_PATH:-.github/PULL_REQUEST_TEMPLATE.md}"
 TMP_BODY="$(mktemp -t pr-body.XXXXXX.md)"
 
@@ -18,10 +18,15 @@ TMP_BODY="$(mktemp -t pr-body.XXXXXX.md)"
 DIFFSTAT=$(git fetch origin "$BASE_BRANCH" >/dev/null 2>&1 || true; git diff --stat origin/"$BASE_BRANCH"...HEAD || git diff --stat "$BASE_BRANCH"...HEAD)
 FILES_CHANGED=$(git diff --name-only origin/"$BASE_BRANCH"...HEAD || git diff --name-only "$BASE_BRANCH"...HEAD)
 COMMITS=$(git log --pretty='- %h %s (%an)' origin/"$BASE_BRANCH"..HEAD || git log --pretty='- %h %s (%an)' "$BASE_BRANCH"..HEAD)
+LAST_COMMIT_BODY=$(git log -1 --pretty=%b)
 
 # Si hay múltiples templates, podés elegir con TEMPLATE_PATH=.github/PULL_REQUEST_TEMPLATE/feature.md
 if [[ -f "$TEMPLATE_PATH" ]]; then
   cat "$TEMPLATE_PATH" > "$TMP_BODY"
+  # Auto-completar Summary si hay cuerpo del último commit
+  if [[ -n "$LAST_COMMIT_BODY" ]]; then
+    sed -i "s/<!-- Describe what this PR does and why -->/$LAST_COMMIT_BODY/" "$TMP_BODY"
+  fi
 else
   # fallback minimal si no existe template
   cat > "$TMP_BODY" <<'EOF'
