@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Verificar que no hay cambios sin commitear
+# Verify no uncommitted changes
 if ! git diff-index --quiet HEAD --; then
-  echo "❌ Error: Hay cambios sin commitear. Commitea primero antes de crear el PR."
+  echo "❌ Error: There are uncommitted changes. Please commit first before creating PR."
   git status --short
   exit 1
 fi
@@ -14,25 +14,25 @@ PR_TITLE="${PR_TITLE:-$(git log -1 --pretty=%s)}"
 TEMPLATE_PATH="${TEMPLATE_PATH:-.github/PULL_REQUEST_TEMPLATE.md}"
 TMP_BODY="$(mktemp -t pr-body.XXXXXX.md)"
 
-# Sección: diffs & commits
+# Section: diffs & commits
 DIFFSTAT=$(git fetch origin "$BASE_BRANCH" >/dev/null 2>&1 || true; git diff --stat origin/"$BASE_BRANCH"...HEAD || git diff --stat "$BASE_BRANCH"...HEAD)
 FILES_CHANGED=$(git diff --name-only origin/"$BASE_BRANCH"...HEAD || git diff --name-only "$BASE_BRANCH"...HEAD)
 COMMITS=$(git log --pretty='- %h %s (%an)' origin/"$BASE_BRANCH"..HEAD || git log --pretty='- %h %s (%an)' "$BASE_BRANCH"..HEAD)
 LAST_COMMIT_BODY=$(git log -1 --pretty=%b)
 
-# Si hay múltiples templates, podés elegir con TEMPLATE_PATH=.github/PULL_REQUEST_TEMPLATE/feature.md
+# If multiple templates exist, you can choose with TEMPLATE_PATH=.github/PULL_REQUEST_TEMPLATE/feature.md
 if [[ -f "$TEMPLATE_PATH" ]]; then
   cat "$TEMPLATE_PATH" > "$TMP_BODY"
-  # Auto-completar Summary si hay cuerpo del último commit
+  # Auto-complete Summary if last commit has body
   if [[ -n "$LAST_COMMIT_BODY" ]]; then
     sed -i "s/<!-- Describe what this PR does and why -->/$LAST_COMMIT_BODY/" "$TMP_BODY"
   fi
 else
-  # fallback minimal si no existe template
+  # minimal fallback if template doesn't exist
   cat > "$TMP_BODY" <<'EOF'
 ## Summary
 
-<!-- breve descripción -->
+<!-- brief description -->
 
 ## Checklist
 - [ ] Tests
@@ -40,16 +40,16 @@ else
 - [ ] Backward compatible
 
 ## Notes
-<!-- riesgos, rollout, etc. -->
+<!-- risks, rollout, etc. -->
 EOF
 fi
 
-# Inyecta datos dinámicos al final
+# Inject dynamic data at the end
 cat >> "$TMP_BODY" <<EOF
 
 ---
 
-## 🧾 Commits incluidos
+## 🧾 Included Commits
 $COMMITS
 
 ## 📊 Diffstat
@@ -58,8 +58,8 @@ $DIFFSTAT
 \`\`\`
 EOF
 
-# Crear PR (ajustá flags a gusto)
-# --draft para borrador, --label para etiquetas, --reviewer para reviewers
+# Create PR (adjust flags as needed)
+# --draft for draft mode, --label for tags, --reviewer for reviewers
 gh pr create \
   --base "$BASE_BRANCH" \
   --title "$PR_TITLE" \
@@ -67,4 +67,4 @@ gh pr create \
   --assignee "@me" \
   --draft
 
-echo "PR creado con template + contenido dinámico. Archivo temporal: $TMP_BODY"
+echo "PR created with template + dynamic content. Temp file: $TMP_BODY"
