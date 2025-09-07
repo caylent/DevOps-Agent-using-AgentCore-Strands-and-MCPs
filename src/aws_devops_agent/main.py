@@ -72,13 +72,29 @@ class AWSDevOpsAgentV2:
         self.agent = None
         self._setup_agent()
     
+    def _get_project_sessions_dir(self):
+        """Get the project-local sessions directory"""
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        return os.path.join(project_root, ".sessions")
+    
     def _setup_agent(self):
         """Setup the main Strands agent with all AWS DevOps tools and session management"""
         print("🤖 Setting up Strands Agent with AWS DevOps tools...")
         
-        # Setup Strands session manager
-        session_manager = FileSessionManager(session_id=self.session_id)
+        # Setup Strands session manager with custom directory
+        sessions_dir = self._get_project_sessions_dir()
+        os.makedirs(sessions_dir, exist_ok=True)
+        
+        # Check if FileSessionManager supports custom base directory
+        try:
+            # Try with base_dir parameter first
+            session_manager = FileSessionManager(session_id=self.session_id, base_dir=sessions_dir)
+        except TypeError:
+            # Fall back to default behavior if base_dir is not supported
+            session_manager = FileSessionManager(session_id=self.session_id)
+            
         print(f"   📝 Session: {self.session_id}")
+        print(f"   📂 Session dir: {os.path.join(sessions_dir, self.session_id)}")
         
         # All available tools
         all_tools = [
@@ -171,14 +187,10 @@ Cuando analices proyectos Terraform, usa toda la información disponible del pla
 - Considera restricciones de producción vs desarrollo
 - Analiza configuraciones reales (instance types, storage, networking)
 
-EJEMPLOS DE CONTEXTO DEL USUARIO:
-- "No T-family EC2 instances" → Recomienda M5, C5, R5 según uso
-- "Production environment" → Multi-AZ, Reserved Instances, no Spot
-- "Use gp3 storage" → Migra de gp2 a gp3 con IOPS específicos  
-- "Reserved instances preferred" → Calcula savings exactos RI vs On-Demand
-- "Use Graviton when possible" → Sugiere instances ARM64 cuando aplicable
-- Escaneo de recursos vivos para identificar recursos sin usar
-- Métricas de utilización en tiempo real de todos los servicios AWS
+⚠️ CRÍTICO - MOSTRAR TABLA DE RECURSOS:
+- Cuando uses analyze_terraform_project, muestra la tabla ASCII completa tal como viene en el resultado de "resource_summary_display" 
+- Debe ser lo PRIMERO que muestres al usuario
+
 
 🏗️ ANÁLISIS DE INFRAESTRUCTURA COMO CÓDIGO (IaC):
 - Validación de configuraciones Terraform y CloudFormation
@@ -298,6 +310,41 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
         except Exception as e:
             return f"❌ Error processing message: {str(e)}"
     
+    def _get_multiline_input(self) -> str:
+        """Get multi-line input from user"""
+        print("📝 Multi-line input mode activated. Type your text, then type \"'''\" on a new line to finish:")
+        lines = []
+        while True:
+            try:
+                line = input("... ")
+                if line.strip() == "'''":
+                    break
+                lines.append(line)
+            except KeyboardInterrupt:
+                print("\n❌ Multi-line input cancelled")
+                return ""
+            except EOFError:
+                break
+        
+        return "\n".join(lines)
+    
+    def _handle_input_with_fallback(self) -> str:
+        """Enhanced input handling with multi-line support fallback"""
+        try:
+            user_input = input("👤 AWS DevOps> ").strip()
+            
+            # If input contains literal \n characters (from paste), convert them
+            if "\\n" in user_input:
+                print("📝 Converting escaped newlines to multi-line format...")
+                user_input = user_input.replace("\\n", "\n")
+            
+            return user_input
+            
+        except KeyboardInterrupt:
+            raise  # Let the main handler deal with this
+        except EOFError:
+            raise  # Let the main handler deal with this
+    
     def interactive_mode(self):
         """Run interactive conversation mode with command history and smart Ctrl+C handling"""
         # Setup readline for command history and arrow key navigation
@@ -327,15 +374,24 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
         print("• Type 'exit' to quit")
         print("\n💡 Use ↑/↓ arrow keys to navigate command history")
         print("💡 Single Ctrl+C clears line, double Ctrl+C exits")
+        print("💡 Multi-line input options:")
+        print("  - Type \"'''\" to enter multi-line mode")
+        print("  - Or paste text with literal \\n characters (they'll be converted)")
         print()
         
         while True:
             try:
-                user_input = input("👤 AWS DevOps> ").strip()
+                user_input = self._handle_input_with_fallback()
                 
                 if user_input.lower() in ['exit', 'quit', 'q']:
                     print("👋 Goodbye!")
                     break
+                
+                # Check for multi-line input trigger
+                if user_input == "'''":
+                    user_input = self._get_multiline_input()
+                    if not user_input:  # User cancelled
+                        continue
                 
                 if not user_input:
                     continue
@@ -399,6 +455,69 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                 input("\n⏸️  Press Enter to continue to next demo...")
             print("=" * 50)
     
+    def _validate_or_create_session(self, session_id: str) -> str:
+        """Validate if session exists, create if it doesn't"""
+        try:
+            # Use project-local session directory
+            sessions_base_dir = self._get_project_sessions_dir()
+            session_dir = os.path.join(sessions_base_dir, session_id)
+            marker_file = os.path.join(session_dir, ".session_initialized")
+            
+            session_exists = False
+            if os.path.exists(session_dir):
+                session_exists = os.path.exists(marker_file) or len([f for f in os.listdir(session_dir) if f.endswith('.json')]) > 0
+            
+            if session_exists:
+                print(f"✅ Using existing session: {session_id}")
+                print(f"   📂 Session data found at: {session_dir}")
+                # Count conversation files to show session activity
+                try:
+                    files = [f for f in os.listdir(session_dir) if f.endswith('.json')]
+                    if files:
+                        print(f"   💬 Found {len(files)} conversation files")
+                except:
+                    pass
+            else:
+                print(f"🆕 Creating NEW session: {session_id}")
+                print(f"   📂 Session will be saved at: {session_dir}")
+                print(f"   💡 This is a fresh start - no previous conversation history")
+                
+                # Create the directory structure to ensure it exists
+                os.makedirs(session_dir, exist_ok=True)
+                print(f"   ✅ Session directory created")
+                
+            # Try to create FileSessionManager with the session_id
+            # This will work whether the session exists or not
+            session_manager = FileSessionManager(session_id=session_id)
+            
+            # Test session manager by creating a small marker file
+            marker_file = os.path.join(session_dir, ".session_initialized")
+            if not os.path.exists(marker_file):
+                with open(marker_file, 'w') as f:
+                    import json
+                    json.dump({
+                        "session_id": session_id,
+                        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        "agent_version": "v2"
+                    }, f, indent=2)
+                print(f"   ✅ Session initialized and marked")
+            
+            return session_id
+            
+        except Exception as e:
+            # If there's any issue, create a new session
+            new_id = str(uuid.uuid4())[:8]
+            print(f"⚠️  Issue with session '{session_id}': {e}")
+            print(f"🆕 Created fallback session: {new_id}")
+            sessions_base_dir = self._get_project_sessions_dir()
+            fallback_dir = os.path.join(sessions_base_dir, new_id)
+            print(f"   📂 Session will be saved at: {fallback_dir}")
+            try:
+                os.makedirs(fallback_dir, exist_ok=True)
+            except:
+                pass
+            return new_id
+
     def _setup_session(self, session_id=None):
         """Setup session management with interactive prompt if needed"""
         if session_id is not None:
@@ -408,9 +527,8 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                 print(f"✅ Created new session: {new_id}")
                 return new_id
             else:
-                # Use provided session ID
-                print(f"✅ Using session: {session_id}")
-                return session_id
+                # Validate or create the session
+                return self._validate_or_create_session(session_id)
         
         # Interactive session prompt
         interrupt_handler = KeyboardInterruptHandler()
@@ -431,8 +549,7 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                     print(f"✅ Created new session: {new_id}")
                     return new_id
                 else:
-                    print(f"✅ Using session: {user_input}")
-                    return user_input
+                    return self._validate_or_create_session(user_input)
                     
             except KeyboardInterrupt:
                 should_exit = interrupt_handler.handle_interrupt()
@@ -452,8 +569,9 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
     def _setup_readline_history(self):
         """Setup readline for command history and arrow key navigation"""
         try:
-            # Set history file path with session ID
-            history_file = os.path.expanduser(f"~/.aws_devops_agent_history_{self.session_id}")
+            # Set history file path with session ID in project sessions directory
+            sessions_base_dir = self._get_project_sessions_dir()
+            history_file = os.path.join(sessions_base_dir, f"{self.session_id}.history")
             
             # Configure readline
             readline.set_startup_hook(None)

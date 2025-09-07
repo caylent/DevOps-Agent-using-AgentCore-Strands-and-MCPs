@@ -79,6 +79,9 @@ def analyze_terraform_project(project_path: str, environment: str = "production"
                 "suggestion": "Ensure your Terraform configuration defines resources"
             }
         
+        # Generate resource summary for user verification
+        resource_summary = _generate_resource_summary(resources_analysis, plan_data, project_path)
+        
         # Calculate costs for all resources using MCP - WORKS FOR ANY RESOURCE TYPE
         cost_analysis = _calculate_terraform_costs_via_mcp(resources_analysis, environment)
         
@@ -93,15 +96,17 @@ def analyze_terraform_project(project_path: str, environment: str = "production"
             "environment": environment,
             "terraform_version": plan_data.get("terraform_version", "unknown"),
             "data": {
+                "resource_summary_display": resource_summary["summary_text"],
                 "resources_summary": {
                     "total_resources": len(resources_analysis),
                     "resource_types": list(set(r["type"] for r in resources_analysis)),
-                    "resource_breakdown": _count_resources_by_type(resources_analysis)
+                    "resource_breakdown": _count_resources_by_type(resources_analysis),
+                    "detailed_breakdown": resource_summary["resource_breakdown"]
                 },
                 "cost_analysis": cost_analysis,
                 "security_analysis": security_analysis,
                 "validation_passed": True,
-                "message": f"Analyzed {len(resources_analysis)} resources from Terraform plan",
+                "message": f"{resource_summary['summary_text']}\n\n💰 Cost analysis complete with {len(resources_analysis)} resources",
                 # ADD DETAILED RESOURCE DATA FOR LLM OPTIMIZATION ANALYSIS
                 "terraform_resources_detail": [
                     {
@@ -851,6 +856,62 @@ def _count_resources_by_type(resources: List[Dict[str, Any]]) -> Dict[str, int]:
         service = _extract_aws_service_from_resource_type(resource["type"])
         counts[service] = counts.get(service, 0) + 1
     return counts
+
+
+def _generate_resource_summary(resources: List[Dict[str, Any]], plan_data: Dict[str, Any], project_path: str) -> Dict[str, Any]:
+    """Generate detailed resource summary for user verification"""
+    
+    # Group resources by type
+    resource_by_type = {}
+    for resource in resources:
+        res_type = resource["type"]
+        if res_type not in resource_by_type:
+            resource_by_type[res_type] = []
+        resource_by_type[res_type].append(resource["name"])
+    
+    # Create user-friendly summary
+    summary_lines = []
+    summary_lines.append("📋 TERRAFORM PLAN ANALYSIS:")
+    summary_lines.append(f"✅ Successfully read plan from: {project_path}")
+    
+    terraform_version = plan_data.get("terraform_version", "unknown")
+    summary_lines.append(f"✅ Terraform version: {terraform_version}")
+    summary_lines.append("")
+    summary_lines.append("📊 RESOURCES DETECTED:")
+    
+    # Create table-like format
+    summary_lines.append("┌─────────────────────────────┬─────────┬────────────────────────────────┐")
+    summary_lines.append("│ Resource Type               │ Count   │ Resource Names                 │")
+    summary_lines.append("├─────────────────────────────┼─────────┼────────────────────────────────┤")
+    
+    total_resources = 0
+    for res_type, names in sorted(resource_by_type.items()):
+        count = len(names)
+        total_resources += count
+        
+        # Truncate names if too long
+        names_str = ", ".join(names[:3])
+        if len(names) > 3:
+            names_str += f" (+{len(names)-3} more)"
+        
+        # Format table row
+        type_padded = f"{res_type:<27}"
+        count_padded = f"{count:<7}"
+        names_padded = f"{names_str:<30}"
+        
+        summary_lines.append(f"│ {type_padded} │ {count_padded} │ {names_padded} │")
+    
+    summary_lines.append("└─────────────────────────────┴─────────┴────────────────────────────────┘")
+    summary_lines.append("")
+    summary_lines.append(f"📈 TOTAL: {total_resources} resources will be created")
+    summary_lines.append("")
+    
+    return {
+        "summary_text": "\n".join(summary_lines),
+        "total_resources": total_resources,
+        "resource_types_count": len(resource_by_type),
+        "resource_breakdown": resource_by_type
+    }
 
 
 def _analyze_terraform_security_from_plan(resources: List[Dict[str, Any]]) -> Dict[str, Any]:
