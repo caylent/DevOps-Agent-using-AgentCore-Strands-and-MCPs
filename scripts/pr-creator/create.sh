@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Check if gh CLI is installed
+if ! command -v gh &> /dev/null; then
+  echo "❌ Error: GitHub CLI (gh) is not installed."
+  echo "Install it from: https://cli.github.com/"
+  exit 1
+fi
+
+# Check if gh is authenticated
+if ! gh auth status &> /dev/null; then
+  echo "❌ Error: GitHub CLI is not authenticated."
+  echo "Run: gh auth login"
+  exit 1
+fi
+
 # Verify no uncommitted changes
 if ! git diff-index --quiet HEAD --; then
   echo "❌ Error: There are uncommitted changes. Please commit first before creating PR."
