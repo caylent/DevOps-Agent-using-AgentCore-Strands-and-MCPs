@@ -99,8 +99,9 @@ Please provide:
 
 Keep the response concise and professional, suitable for a pull request description."
 
-  # Escape JSON special characters in prompt
-  local escaped_prompt=$(echo "$prompt" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+  # Escape JSON special characters in prompt (simplified)
+  local escaped_prompt
+  escaped_prompt=$(echo "$prompt" | sed 's/"/\\"/g' | tr '\n' ' ' | sed 's/  */ /g')
   
   # Create JSON payload
   local json_payload="{
@@ -145,7 +146,14 @@ Keep the response concise and professional, suitable for a pull request descript
 
 # Generate AI description
 echo "🧠 Analizando cambios para generar descripción inteligente..."
-AI_DESCRIPTION=$(generate_ai_description "$DIFF_CONTENT" "$COMMITS" "$FILES_CHANGED")
+echo "Debug: Diff size: ${#DIFF_CONTENT} chars, Files: $(echo "$FILES_CHANGED" | wc -l) files"
+
+if AI_DESCRIPTION=$(generate_ai_description "$DIFF_CONTENT" "$COMMITS" "$FILES_CHANGED"); then
+  echo "✅ IA description generada exitosamente"
+else
+  echo "⚠️  IA falló, continuando con fallback"
+  AI_DESCRIPTION="<!-- AI description generation failed, using fallback -->"
+fi
 
 # If multiple templates exist, you can choose with TEMPLATE_PATH=.github/PULL_REQUEST_TEMPLATE/feature.md
 if [[ -f "$TEMPLATE_PATH" ]]; then
