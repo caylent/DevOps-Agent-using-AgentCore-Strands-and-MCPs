@@ -1,6 +1,6 @@
 """
-AWS Cost Optimization Tools
-Real AWS pricing and cost analysis via MCP servers
+AWS Pricing Tools
+Real-time AWS pricing data via MCP servers
 """
 
 import asyncio
@@ -78,109 +78,6 @@ def get_real_aws_pricing(service: str, instance_type: str = None, region: str = 
 
 
 @tool
-def analyze_cost_optimization_opportunities(resource_type: str, current_configuration: Dict[str, Any], region: str = "us-east-1") -> Dict[str, Any]:
-    """
-    Analyze cost optimization opportunities for AWS resources
-    
-    Args:
-        resource_type: Type of AWS resource (EC2, RDS, Lambda, etc.)
-        current_configuration: Current resource configuration
-        region: AWS region
-    
-    Returns:
-        Dict containing optimization recommendations with cost savings
-    """
-    try:
-        optimization_opportunities = []
-        total_potential_savings = 0.0
-        
-        if resource_type.upper() == "EC2":
-            opportunities = _analyze_ec2_optimization(current_configuration, region)
-            optimization_opportunities.extend(opportunities)
-        elif resource_type.upper() == "RDS":
-            opportunities = _analyze_rds_optimization(current_configuration, region)
-            optimization_opportunities.extend(opportunities)
-        elif resource_type.upper() == "LAMBDA":
-            opportunities = _analyze_lambda_optimization(current_configuration, region)
-            optimization_opportunities.extend(opportunities)
-        
-        # Calculate total potential savings
-        for opp in optimization_opportunities:
-            total_potential_savings += opp.get("monthly_savings", 0)
-        
-        return {
-            "status": "success",
-            "resource_type": resource_type,
-            "region": region,
-            "total_opportunities": len(optimization_opportunities),
-            "optimization_opportunities": optimization_opportunities,
-            "total_potential_monthly_savings": round(total_potential_savings, 2),
-            "total_potential_annual_savings": round(total_potential_savings * 12, 2),
-            "analysis_timestamp": datetime.now().isoformat(),
-            "data_source": "AWS Pricing API + Cost Explorer via MCP"
-        }
-        
-    except Exception as e:
-        return {"status": "error", "error": f"Cost optimization analysis failed: {str(e)}"}
-
-
-@tool
-def generate_cost_comparison_report(configurations: List[Dict[str, Any]], region: str = "us-east-1") -> Dict[str, Any]:
-    """
-    Generate comprehensive cost comparison report for different configurations
-    
-    Args:
-        configurations: List of configuration options to compare
-        region: AWS region
-    
-    Returns:
-        Dict containing detailed cost comparison report
-    """
-    try:
-        comparison_results = []
-        
-        for i, config in enumerate(configurations):
-            # Get pricing for each configuration
-            pricing_result = get_real_aws_pricing(
-                config.get("service", "EC2"),
-                config.get("instance_type"),
-                region
-            )
-            
-            if pricing_result.get("status") == "success":
-                pricing_data = pricing_result.get("pricing_data", {})
-                
-                comparison_results.append({
-                    "configuration_id": f"config_{i+1}",
-                    "configuration": config,
-                    "pricing": pricing_data,
-                    "monthly_cost_on_demand": pricing_data.get("on_demand", {}).get("monthly", 0),
-                    "monthly_cost_reserved_1year": pricing_data.get("reserved_1year", {}).get("monthly", 0),
-                    "annual_savings_with_reserved": (
-                        pricing_data.get("on_demand", {}).get("monthly", 0) - 
-                        pricing_data.get("reserved_1year", {}).get("monthly", 0)
-                    ) * 12
-                })
-        
-        # Find most cost-effective option
-        best_option = min(comparison_results, key=lambda x: x["monthly_cost_on_demand"]) if comparison_results else None
-        
-        return {
-            "status": "success",
-            "region": region,
-            "total_configurations_analyzed": len(configurations),
-            "comparison_results": comparison_results,
-            "recommended_configuration": best_option,
-            "report_generated": datetime.now().isoformat(),
-            "data_source": "Real AWS Pricing API",
-            "executive_summary": _generate_executive_summary(comparison_results)
-        }
-        
-    except Exception as e:
-        return {"status": "error", "error": f"Cost comparison report generation failed: {str(e)}"}
-
-
-@tool
 def calculate_reserved_instance_savings(instance_types: List[str], usage_hours_per_month: int = 730, region: str = "us-east-1") -> Dict[str, Any]:
     """
     Calculate potential savings with Reserved Instances
@@ -248,6 +145,56 @@ def calculate_reserved_instance_savings(instance_types: List[str], usage_hours_p
         return {"status": "error", "error": f"Reserved Instance analysis failed: {str(e)}"}
 
 
+@tool
+def get_service_pricing_overview(service: str, region: str = "us-east-1") -> Dict[str, Any]:
+    """
+    Get comprehensive pricing overview for an AWS service
+    
+    Args:
+        service: AWS service name (e.g., 'EC2', 'RDS', 'Lambda')
+        region: AWS region (default: us-east-1)
+    
+    Returns:
+        Dict containing service pricing overview
+    """
+    try:
+        if mcp_client:
+            # Use real MCP client for service pricing overview
+            pricing_client = mcp_client.get_pricing_client()
+            if pricing_client:
+                with pricing_client:
+                    tools = pricing_client.list_tools_sync()
+                    for tool in tools:
+                        if hasattr(tool, 'name') and 'service_pricing' in tool.name.lower():
+                            result = pricing_client.call_tool_sync(
+                                tool_use_id="service-pricing-overview",
+                                name=tool.name,
+                                arguments={
+                                    "service": service,
+                                    "region": region
+                                }
+                            )
+            
+            if result.get("status") == "success":
+                return {
+                    "status": "success",
+                    "service": service,
+                    "region": region,
+                    "pricing_overview": result.get("overview", {}),
+                    "popular_configurations": result.get("popular_configs", []),
+                    "source": "AWS Pricing API (Real-time)",
+                    "last_updated": datetime.now().isoformat()
+                }
+            else:
+                return {"status": "error", "error": result.get("error", "Service pricing query failed")}
+        else:
+            # Fallback mock data for testing
+            return _get_mock_service_overview(service, region)
+            
+    except Exception as e:
+        return {"status": "error", "error": f"Failed to get service pricing overview: {str(e)}"}
+
+
 # Helper functions
 def _calculate_savings_opportunities(pricing_data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Calculate potential savings opportunities from pricing data"""
@@ -268,79 +215,6 @@ def _calculate_savings_opportunities(pricing_data: Dict[str, Any]) -> List[Dict[
     return opportunities
 
 
-def _analyze_ec2_optimization(config: Dict[str, Any], region: str) -> List[Dict[str, Any]]:
-    """Analyze EC2-specific optimization opportunities"""
-    opportunities = []
-    
-    instance_type = config.get("instance_type", "")
-    
-    # Suggest right-sizing opportunities
-    if "large" in instance_type or "xlarge" in instance_type:
-        opportunities.append({
-            "optimization_type": "Right-sizing",
-            "description": "Consider downsizing if utilization is consistently low",
-            "potential_action": "Analyze CloudWatch metrics and consider smaller instance type",
-            "monthly_savings": 50.0,  # This would be calculated from real data
-            "confidence": "medium"
-        })
-    
-    # Suggest Spot Instances for non-critical workloads
-    opportunities.append({
-        "optimization_type": "Spot Instances",
-        "description": "Use Spot Instances for fault-tolerant workloads",
-        "potential_action": "Migrate suitable workloads to Spot Instances",
-        "monthly_savings": 100.0,  # This would be calculated from real data
-        "confidence": "high"
-    })
-    
-    return opportunities
-
-
-def _analyze_rds_optimization(config: Dict[str, Any], region: str) -> List[Dict[str, Any]]:
-    """Analyze RDS-specific optimization opportunities"""
-    opportunities = []
-    
-    # Suggest Aurora Serverless for variable workloads
-    opportunities.append({
-        "optimization_type": "Aurora Serverless",
-        "description": "Consider Aurora Serverless for variable database workloads",
-        "potential_action": "Migrate to Aurora Serverless v2",
-        "monthly_savings": 200.0,  # This would be calculated from real data
-        "confidence": "medium"
-    })
-    
-    return opportunities
-
-
-def _analyze_lambda_optimization(config: Dict[str, Any], region: str) -> List[Dict[str, Any]]:
-    """Analyze Lambda-specific optimization opportunities"""
-    opportunities = []
-    
-    # Suggest memory optimization
-    opportunities.append({
-        "optimization_type": "Memory Optimization",
-        "description": "Optimize Lambda memory allocation based on execution patterns",
-        "potential_action": "Use AWS Lambda Power Tuning to find optimal memory setting",
-        "monthly_savings": 25.0,  # This would be calculated from real data
-        "confidence": "high"
-    })
-    
-    return opportunities
-
-
-def _generate_executive_summary(comparison_results: List[Dict[str, Any]]) -> str:
-    """Generate executive summary for cost comparison"""
-    if not comparison_results:
-        return "No configurations to compare."
-    
-    best_config = min(comparison_results, key=lambda x: x["monthly_cost_on_demand"])
-    worst_config = max(comparison_results, key=lambda x: x["monthly_cost_on_demand"])
-    
-    savings = worst_config["monthly_cost_on_demand"] - best_config["monthly_cost_on_demand"]
-    
-    return f"Configuration {best_config['configuration_id']} offers the best value at ${best_config['monthly_cost_on_demand']:.2f}/month. Switching from the most expensive option could save ${savings:.2f}/month (${savings*12:.2f}/year)."
-
-
 def _get_mock_pricing_data(service: str, instance_type: str, region: str) -> Dict[str, Any]:
     """Mock pricing data for testing when MCP client is not available"""
     mock_pricing = {
@@ -358,4 +232,25 @@ def _get_mock_pricing_data(service: str, instance_type: str, region: str) -> Dic
         "source": "Mock data for testing",
         "last_updated": datetime.now().isoformat(),
         "savings_opportunities": _calculate_savings_opportunities(mock_pricing)
+    }
+
+
+def _get_mock_service_overview(service: str, region: str) -> Dict[str, Any]:
+    """Mock service overview for testing"""
+    return {
+        "status": "success",
+        "service": service,
+        "region": region,
+        "pricing_overview": {
+            "pricing_model": "Pay-as-you-go",
+            "minimum_charge": "$0.00",
+            "billing_granularity": "Per second"
+        },
+        "popular_configurations": [
+            {"type": "t3.micro", "monthly_cost": "$8.47"},
+            {"type": "t3.small", "monthly_cost": "$16.93"},
+            {"type": "t3.medium", "monthly_cost": "$33.87"}
+        ],
+        "source": "Mock data for testing",
+        "last_updated": datetime.now().isoformat()
     }

@@ -1,58 +1,65 @@
-"""AWS Cost Optimization Tools"""
+"""
+AWS Cost Management Tools - Real AWS Data Access via MCP Client
+Access to actual AWS Cost Explorer data using MCP servers
 
-from .pricing import (
-    get_real_aws_pricing,
-    analyze_cost_optimization_opportunities,
-    generate_cost_comparison_report,
-    calculate_reserved_instance_savings
-)
-from .optimization import (
+This module provides comprehensive cost analysis capabilities including:
+- Real-time cost data retrieval via AWS Cost Explorer MCP Server  
+- Usage-based optimization recommendations from actual utilization data
+- Multi-account cost analysis and reporting
+- Integration with AWS Cost Anomaly Detection
+"""
+
+from .explorer import (
     get_actual_aws_costs,
-    analyze_cost_trends_real,
-    get_multi_account_cost_breakdown,
+    get_cost_by_service,
+    get_cost_trends,
     get_rightsizing_recommendations,
     get_reserved_instance_recommendations,
-    get_cost_forecast_mcp,
-    compare_cost_periods_mcp
+    analyze_cost_anomalies
 )
+
+from .optimization import (
+    analyze_usage_based_optimization,
+    get_underutilized_resources,
+    calculate_wasted_spend,
+    generate_cost_optimization_report
+)
+
 from .resources import (
     scan_live_aws_resources,
     analyze_unused_resources,
     get_resource_utilization_metrics,
-    discover_cross_account_resources
+    discover_cross_account_resources,
+    analyze_resource_costs,
+    get_unused_resources,
+    calculate_resource_utilization
 )
+
 from .multi_account import (
-    list_cross_account_resources,
-    execute_cross_account_operation,
-    generate_multi_account_report,
-    monitor_cross_account_compliance
+    get_organization_costs,
+    analyze_account_costs,
+    generate_multi_account_report
 )
 
 __all__ = [
-    # Pricing tools
-    "get_real_aws_pricing",
-    "analyze_cost_optimization_opportunities", 
-    "generate_cost_comparison_report",
-    "calculate_reserved_instance_savings",
-    
-    # Optimization tools
-    "get_actual_aws_costs",
-    "analyze_cost_trends_real",
-    "get_multi_account_cost_breakdown",
-    "get_rightsizing_recommendations",
-    "get_reserved_instance_recommendations", 
-    "get_cost_forecast_mcp",
-    "compare_cost_periods_mcp",
-    
-    # Resource tools
-    "scan_live_aws_resources",
-    "analyze_unused_resources",
-    "get_resource_utilization_metrics",
-    "discover_cross_account_resources",
-    
-    # Multi-account tools
-    "list_cross_account_resources",
-    "execute_cross_account_operation",
-    "generate_multi_account_report",
-    "monitor_cross_account_compliance"
+    'get_actual_aws_costs',
+    'get_cost_by_service', 
+    'get_cost_trends',
+    'get_rightsizing_recommendations',
+    'get_reserved_instance_recommendations',
+    'analyze_cost_anomalies',
+    'analyze_usage_based_optimization',
+    'get_underutilized_resources',
+    'calculate_wasted_spend',
+    'generate_cost_optimization_report',
+    'scan_live_aws_resources',
+    'analyze_unused_resources',
+    'get_resource_utilization_metrics',
+    'discover_cross_account_resources',
+    'analyze_resource_costs',
+    'get_unused_resources',
+    'calculate_resource_utilization',
+    'get_organization_costs',
+    'analyze_account_costs',
+    'generate_multi_account_report'
 ]

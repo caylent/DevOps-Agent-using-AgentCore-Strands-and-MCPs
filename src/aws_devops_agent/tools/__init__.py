@@ -1,6 +1,7 @@
 """AWS DevOps Tools - Organized by domain"""
 
 # Import all tools for easy access
+from .aws_pricing import *
 from .aws_cost import *
 from .aws_iac import *
 from .aws_cdk import *
@@ -10,26 +11,36 @@ from .github import *
 from .reporting import *
 
 __all__ = [
-    # Cost tools
+    # Pricing tools (AWS Pricing API)
     "get_real_aws_pricing",
-    "analyze_cost_optimization_opportunities",
+    "calculate_reserved_instance_savings", 
+    "get_service_pricing_overview",
     "generate_cost_comparison_report",
-    "calculate_reserved_instance_savings",
+    "compare_instance_types",
+    "compare_pricing_models",
+    "compare_regions_pricing",
+    "analyze_price_optimization_opportunities",
+    "suggest_cost_effective_alternatives",
+    "calculate_savings_potential",
+    "optimize_terraform_plan_costs",
+    
+    # Cost tools (AWS Cost Explorer)
     "get_actual_aws_costs",
-    "analyze_cost_trends_real",
-    "get_multi_account_cost_breakdown",
-    "get_rightsizing_recommendations",
+    "get_cost_by_service",
+    "get_cost_trends",
+    "get_rightsizing_recommendations", 
     "get_reserved_instance_recommendations",
-    "get_cost_forecast_mcp",
-    "compare_cost_periods_mcp",
-    "scan_live_aws_resources",
-    "analyze_unused_resources",
-    "get_resource_utilization_metrics",
-    "discover_cross_account_resources",
-    "list_cross_account_resources",
-    "execute_cross_account_operation",
+    "analyze_cost_anomalies",
+    "analyze_usage_based_optimization",
+    "get_underutilized_resources",
+    "calculate_wasted_spend",
+    "generate_cost_optimization_report",
+    "analyze_resource_costs",
+    "get_unused_resources",
+    "calculate_resource_utilization",
+    "get_organization_costs",
+    "analyze_account_costs",
     "generate_multi_account_report",
-    "monitor_cross_account_compliance",
     
     # IaC tools
     "analyze_terraform_configuration",

@@ -7,16 +7,45 @@ Integrates all AWS DevOps tools with Strands + MCP Servers
 import asyncio
 import os
 import sys
+import readline
+import atexit
+import uuid
+import time
+import signal
 from pathlib import Path
 from typing import Dict, List, Any
 
 # Import Strands and configuration
 from strands import Agent
+from strands.session.file_session_manager import FileSessionManager
 from .config import get_config
 from .config.safety_config import get_safety_config, requires_consent, get_consent_message
 
 # Import all our AWS DevOps tools
 from .tools import *
+
+
+class KeyboardInterruptHandler:
+    """Handle double Ctrl+C to exit, single Ctrl+C to clear line"""
+    
+    def __init__(self, timeout=1.0):
+        self.last_interrupt_time = 0
+        self.timeout = timeout
+        self.interrupt_count = 0
+    
+    def handle_interrupt(self):
+        """Handle keyboard interrupt - return True if should exit"""
+        current_time = time.time()
+        
+        if current_time - self.last_interrupt_time < self.timeout:
+            # Second Ctrl+C within timeout - exit
+            print("\n👋 Goodbye!")
+            return True
+        else:
+            # First Ctrl+C or after timeout - just clear line
+            print("\n💡 Press Ctrl+C again within 1 second to exit, or continue typing...")
+            self.last_interrupt_time = current_time
+            return False
 
 
 class AWSDevOpsAgentV2:
@@ -25,12 +54,15 @@ class AWSDevOpsAgentV2:
     Integrates Strands SDK with comprehensive AWS DevOps tools
     """
     
-    def __init__(self):
+    def __init__(self, session_id=None):
         print("🚀 AWS DevOps Agent v2 - Production Ready")
         print("   Using Strands SDK + AWS DevOps Tools + MCP Integration")
         
         # Load configuration
         self.config = get_config()
+        
+        # Setup session management
+        self.session_id = self._setup_session(session_id)
         self.safety_config = get_safety_config()
         print(f"   📋 Model: {self.config.model.model_id}")
         print(f"   🌍 Region: {self.config.aws_region}")
@@ -41,31 +73,34 @@ class AWSDevOpsAgentV2:
         self._setup_agent()
     
     def _setup_agent(self):
-        """Setup the main Strands agent with all AWS DevOps tools"""
+        """Setup the main Strands agent with all AWS DevOps tools and session management"""
         print("🤖 Setting up Strands Agent with AWS DevOps tools...")
+        
+        # Setup Strands session manager
+        session_manager = FileSessionManager(session_id=self.session_id)
+        print(f"   📝 Session: {self.session_id}")
         
         # All available tools
         all_tools = [
             # Cost Optimization Tools
             get_real_aws_pricing,
-            analyze_cost_optimization_opportunities,
+            analyze_price_optimization_opportunities,
             generate_cost_comparison_report,
             calculate_reserved_instance_savings,
             
             # Real AWS Cost Explorer Tools (via MCP Servers)
             get_actual_aws_costs,
-            analyze_cost_trends_real,
-            get_multi_account_cost_breakdown,
+            get_cost_trends,
+            get_organization_costs,
             get_rightsizing_recommendations,
             get_reserved_instance_recommendations,
-            get_cost_forecast_mcp,
-            compare_cost_periods_mcp,
+            analyze_cost_anomalies,
+            analyze_usage_based_optimization,
             
-            # Live AWS Resources Tools
-            scan_live_aws_resources,
-            analyze_unused_resources,
-            get_resource_utilization_metrics,
-            discover_cross_account_resources,
+            # Live AWS Resources Tools  
+            get_unused_resources,
+            calculate_resource_utilization,
+            analyze_resource_costs,
             
             # Infrastructure as Code Tools
             analyze_terraform_configuration,
@@ -93,10 +128,7 @@ class AWSDevOpsAgentV2:
             scan_security_vulnerabilities,
             
             # Multi-Account Management Tools
-            list_cross_account_resources,
-            execute_cross_account_operation,
             generate_multi_account_report,
-            monitor_cross_account_compliance,
             
             # GitHub Integration Tools
             create_optimization_pull_request,
@@ -115,11 +147,12 @@ class AWSDevOpsAgentV2:
             get_document_info,
         ]
         
-        # Create the agent
+        # Create the agent with session management
         self.agent = Agent(
             model=self.config.model.model_id,
             tools=all_tools,
             name="AWS DevOps Agent v2",
+            session_manager=session_manager,
             system_prompt="""Eres un especialista en AWS DevOps con acceso completo a herramientas de producción.
 
 TUS CAPACIDADES PRINCIPALES:
@@ -128,6 +161,22 @@ TUS CAPACIDADES PRINCIPALES:
 - Acceso REAL a AWS Cost Explorer con datos de facturación actuales
 - Análisis de tendencias y breakdowns multi-cuenta via Cost Explorer API
 - Recomendaciones de rightsizing y Reserved Instances basadas en datos reales
+
+🎯 ANÁLISIS INTELIGENTE DE TERRAFORM:
+Cuando analices proyectos Terraform, usa toda la información disponible del plan real:
+- Lee TODOS los recursos específicos del terraform_resources_detail
+- Considera las preferencias del usuario (ej: "no T-family instances", "production environment", "use reserved instances")
+- Calcula ahorros específicos con precios reales de AWS
+- Sugiere alternativas técnicas concretas (ej: "t3.large → m5.large")
+- Considera restricciones de producción vs desarrollo
+- Analiza configuraciones reales (instance types, storage, networking)
+
+EJEMPLOS DE CONTEXTO DEL USUARIO:
+- "No T-family EC2 instances" → Recomienda M5, C5, R5 según uso
+- "Production environment" → Multi-AZ, Reserved Instances, no Spot
+- "Use gp3 storage" → Migra de gp2 a gp3 con IOPS específicos  
+- "Reserved instances preferred" → Calcula savings exactos RI vs On-Demand
+- "Use Graviton when possible" → Sugiere instances ARM64 cuando aplicable
 - Escaneo de recursos vivos para identificar recursos sin usar
 - Métricas de utilización en tiempo real de todos los servicios AWS
 
@@ -250,7 +299,13 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
             return f"❌ Error processing message: {str(e)}"
     
     def interactive_mode(self):
-        """Run interactive conversation mode"""
+        """Run interactive conversation mode with command history and smart Ctrl+C handling"""
+        # Setup readline for command history and arrow key navigation
+        self._setup_readline_history()
+        
+        # Setup double Ctrl+C handler
+        interrupt_handler = KeyboardInterruptHandler()
+        
         print("\n💡 AWS DevOps Agent v2 - Interactive Mode")
         print("=" * 60)
         print("Available capabilities:")
@@ -270,6 +325,8 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
         print("• 'Generate a cost analysis report'")
         print("• 'Create a security compliance document'")
         print("• Type 'exit' to quit")
+        print("\n💡 Use ↑/↓ arrow keys to navigate command history")
+        print("💡 Single Ctrl+C clears line, double Ctrl+C exits")
         print()
         
         while True:
@@ -277,6 +334,7 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                 user_input = input("👤 AWS DevOps> ").strip()
                 
                 if user_input.lower() in ['exit', 'quit', 'q']:
+                    print("👋 Goodbye!")
                     break
                 
                 if not user_input:
@@ -287,6 +345,15 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                 print(f"🤖 {response}\n")
                 
             except KeyboardInterrupt:
+                # Handle smart Ctrl+C logic
+                should_exit = interrupt_handler.handle_interrupt()
+                if should_exit:
+                    break
+                # Continue the loop for single Ctrl+C
+                continue
+                
+            except EOFError:
+                print("\n👋 Goodbye!")  
                 break
             except Exception as e:
                 print(f"❌ Error: {e}\n")
@@ -332,6 +399,100 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                 input("\n⏸️  Press Enter to continue to next demo...")
             print("=" * 50)
     
+    def _setup_session(self, session_id=None):
+        """Setup session management with interactive prompt if needed"""
+        if session_id is not None:
+            if session_id == "new":
+                # Generate new session ID
+                new_id = str(uuid.uuid4())[:8]
+                print(f"✅ Created new session: {new_id}")
+                return new_id
+            else:
+                # Use provided session ID
+                print(f"✅ Using session: {session_id}")
+                return session_id
+        
+        # Interactive session prompt
+        interrupt_handler = KeyboardInterruptHandler()
+        print("\n🔐 AWS DevOps Agent v2 - Session Setup")
+        print("=" * 50)
+        print("💡 Single Ctrl+C clears line, double Ctrl+C creates new session")
+        
+        while True:
+            try:
+                user_input = input("Enter session ID (or 'new' for new session): ").strip()
+                
+                if not user_input:
+                    print("⚠️  Please enter a session ID or 'new'")
+                    continue
+                
+                if user_input.lower() == "new":
+                    new_id = str(uuid.uuid4())[:8]
+                    print(f"✅ Created new session: {new_id}")
+                    return new_id
+                else:
+                    print(f"✅ Using session: {user_input}")
+                    return user_input
+                    
+            except KeyboardInterrupt:
+                should_exit = interrupt_handler.handle_interrupt()
+                if should_exit:
+                    # Create new session and continue
+                    new_id = str(uuid.uuid4())[:8]
+                    print(f"✅ Using default new session: {new_id}")
+                    return new_id
+                continue
+                
+            except EOFError:
+                # Default to new session if user cancels with Ctrl+D
+                new_id = str(uuid.uuid4())[:8] 
+                print(f"\n✅ Using default new session: {new_id}")
+                return new_id
+
+    def _setup_readline_history(self):
+        """Setup readline for command history and arrow key navigation"""
+        try:
+            # Set history file path with session ID
+            history_file = os.path.expanduser(f"~/.aws_devops_agent_history_{self.session_id}")
+            
+            # Configure readline
+            readline.set_startup_hook(None)
+            readline.set_completer(None)
+            
+            # Enable arrow key navigation
+            readline.parse_and_bind("\\e[A: history-search-backward")  # Up arrow
+            readline.parse_and_bind("\\e[B: history-search-forward")   # Down arrow
+            readline.parse_and_bind("\\e[C: forward-char")             # Right arrow
+            readline.parse_and_bind("\\e[D: backward-char")            # Left arrow
+            
+            # Enable common shortcuts
+            readline.parse_and_bind("\\C-a: beginning-of-line")        # Ctrl+A
+            readline.parse_and_bind("\\C-e: end-of-line")              # Ctrl+E
+            readline.parse_and_bind("\\C-k: kill-line")                # Ctrl+K
+            readline.parse_and_bind("\\C-u: unix-line-discard")        # Ctrl+U
+            
+            # Set maximum history length
+            readline.set_history_length(1000)
+            
+            # Load existing history if it exists
+            if os.path.exists(history_file):
+                readline.read_history_file(history_file)
+            
+            # Setup auto-save on exit
+            atexit.register(lambda: self._save_history(history_file))
+            
+        except Exception as e:
+            # If readline setup fails, continue without history
+            print(f"⚠️  Command history unavailable: {e}")
+    
+    def _save_history(self, history_file: str):
+        """Save command history to file"""
+        try:
+            readline.write_history_file(history_file)
+        except Exception:
+            # Silently ignore history save errors
+            pass
+
     def get_status(self) -> Dict[str, Any]:
         """Get agent status"""
         return {
@@ -357,12 +518,13 @@ def main():
     parser.add_argument("--mode", choices=["interactive", "demo"], default="interactive",
                        help="Run mode: interactive chat or demo scenarios")
     parser.add_argument("--query", type=str, help="Single query to process")
+    parser.add_argument("--session-id", type=str, help="Session ID ('new' for new session)")
     
     args = parser.parse_args()
     
     try:
-        # Initialize agent
-        agent = AWSDevOpsAgentV2()
+        # Initialize agent with session management
+        agent = AWSDevOpsAgentV2(session_id=args.session_id)
         
         if args.query:
             # Single query mode
