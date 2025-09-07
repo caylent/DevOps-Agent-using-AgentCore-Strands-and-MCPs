@@ -71,6 +71,15 @@ generate_ai_description() {
     return 1
   fi
   
+  # Limit diff size to prevent JSON issues
+  if [[ ${#diff_content} -gt 10000 ]]; then
+    echo "⚠️  Diff muy largo (${#diff_content} chars), usando resumen"
+    diff_content=$(echo "$diff_content" | head -100)
+    diff_content="$diff_content
+
+[... diff truncado por tamaño ...]"
+  fi
+
   # Create prompt for Bedrock
   local prompt="Analyze the following git changes and generate a concise, professional pull request description in Spanish.
 
@@ -105,18 +114,26 @@ Keep the response concise and professional, suitable for a pull request descript
     ]
   }"
 
-  # Call Bedrock API
+  # Call Bedrock API with timeout
   echo "🤖 Generando descripción inteligente con Bedrock ($AI_MODEL)..."
   local ai_response
-  if ai_response=$(aws bedrock-runtime invoke-model \
+  local temp_response="/tmp/bedrock-response-$$.json"
+  
+  # Use timeout to prevent hanging
+  if timeout 30s aws bedrock-runtime invoke-model \
     --model-id "$AI_MODEL" \
     --body "$json_payload" \
     --cli-binary-format raw-in-base64-out \
-    /tmp/bedrock-response.json 2>/dev/null && cat /tmp/bedrock-response.json | jq -r '.content[0].text' 2>/dev/null); then
+    "$temp_response" 2>/dev/null; then
     
-    if [[ -n "$ai_response" && "$ai_response" != "null" ]]; then
-      echo "$ai_response"
-      return 0
+    if [[ -f "$temp_response" ]]; then
+      ai_response=$(cat "$temp_response" | jq -r '.content[0].text' 2>/dev/null)
+      rm -f "$temp_response"
+      
+      if [[ -n "$ai_response" && "$ai_response" != "null" ]]; then
+        echo "$ai_response"
+        return 0
+      fi
     fi
   fi
   
