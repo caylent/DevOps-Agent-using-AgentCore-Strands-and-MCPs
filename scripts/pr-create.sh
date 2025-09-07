@@ -47,11 +47,6 @@ cat >> "$TMP_BODY" <<EOF
 ## 🧾 Commits incluidos
 $COMMITS
 
-## 🔄 Archivos cambiados
-\`\`\`
-$FILES_CHANGED
-\`\`\`
-
 ## 📊 Diffstat
 \`\`\`
 $DIFFSTAT
