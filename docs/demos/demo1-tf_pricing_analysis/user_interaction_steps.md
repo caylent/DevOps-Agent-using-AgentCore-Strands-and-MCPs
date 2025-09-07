@@ -1,5 +1,5 @@
 # Step 1 - Setup the Environment
-
+# DRAFT
 ```bash
 export credentials 
 
@@ -13,6 +13,9 @@ terraform plan
 
 terraform plan -out=plan.out
 
+terraform show -json plan.out > plan-detailed.json 2>/dev/null || echo "Could not convert   │
+│    plan.out to JSON"  
+
 ```
 
 # Step 3: Cost Analysis with DevOps Agent
@@ -20,10 +23,63 @@ terraform plan -out=plan.out
 make help
 
 make setup
-terrafo
+
 source .venv/bin/activate
 
+many options to run the example
+
+095e6a9a
+
+  1. --mode interactive (default): Runs the agent in interactive chat mode where you can have a conversation
+  2. --mode demo: Runs predefined demo scenarios
+  3. --query "your question": Runs the agent in "query" mode - processes a single query and exits
+
+options:
+  -h, --help            show this help message and exit
+  --mode {interactive,demo}
+                        Run mode: interactive chat or demo scenarios
+  --query QUERY         Single query to process
+
 make run 
+
+(deploy)
+b84393d9
+I want to know how much it will cost this terraform stack solution (/root/linux-code/simple-terraform-ec2), when it will be created in AWS. I've already obtained the tfplan (plan.out) and the detailed show plan-detailed.json. Provide me a detailed cost analysis, including breakdown by service, region.
+
+is there any optimization that i can run to reduce costs? what changes should i do?
+
+  Context and constraints:
+  - I don't want any T-family EC2 instances
+  - All production environments must use at least 2 AZs
+  - For EBS volumes, use gp3 with at least 6000 IOPS
+  - Apply 1-year reserved instances with no upfront for production servers
+  - Use Graviton instances when possible
+  - RDS databases must be Multi-AZ in production
+
+
+is there any optimization that i can run to reduce costs? what changes should i do?
+
+  Context and constraints:
+  - I don't want any T-family EC2 instances
+  - All production environments must use at least 2 AZs
+  - For EBS volumes, use gp3 with at least 6000 IOPS
+  - Apply 1-year reserved instances with no upfront for production servers
+  - Use Graviton instances when possible
+  - RDS databases must be Multi-AZ in production
+
+Are there any cost optimization opportunities I can apply? What improvements would you recommend, and what would be the estimated cost savings?
+Once you review, please show me a table easy to understand (Total Estimated Monthly Savings ; New Estimated Monthly Cost) 
+Context and constraints - Extreme cost savings:
+- Use smallest possible sizes or capacities.
+- Consolidate resources if possible.
+- Turn off or pause non-prod environments when not used.
+- Apply cheapest pricing models (spot, reserved, savings plans) if allowed.
+- Use cost-efficient storage classes and minimal redundancy unless required.
+- Apply cost reduction logic to ALL resources: compute, storage, databases, networking, monitoring, etc.
+
+
+any potential cost optimization opportunities
+ Use the AWS MCP Pricing API to get real-time pricing data
 ## 🎯 Objective
 
 Use our **real AWS DevOps Agent** to analyze the Terraform plan and get cost estimates using natural language interaction.

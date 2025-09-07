@@ -223,3 +223,8 @@ reports/**/*.xlsx
 reports/**/*.pdf
 # Keep .gitkeep files to maintain folder structure
 !reports/**/.gitkeep
+
+# Session Storage
+# Local session data - contains conversation history and private data
+.sessions/
+*.session
