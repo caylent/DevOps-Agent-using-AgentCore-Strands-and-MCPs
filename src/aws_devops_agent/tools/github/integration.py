@@ -41,7 +41,8 @@ def create_optimization_pull_request(
                 "status": "error",
                 "error": "CRITICAL: User consent required! This function cannot create PRs without explicit user approval.",
                 "safety_message": "To create a PR, the user must explicitly approve this action. Use user_consent=True parameter.",
-                "recommendation": "Ask the user: 'Do you want me to create a pull request with these optimization changes? Please confirm with explicit approval.'"
+                "recommendation": "Ask the user: 'Do you want me to create a pull request with these optimization changes? Please confirm with explicit approval.'",
+                "data_source": "GitHub Integration (Mock Data - Real GitHub API integration needed)"
             }
         
         if not branch_name:
@@ -60,6 +61,7 @@ def create_optimization_pull_request(
             "branch_name": branch_name,
             "title": pr_title,
             "optimization_type": optimization_type,
+            "data_source": "GitHub Integration (Mock Data - Real GitHub API integration needed)",
             "changes_summary": {
                 "files_modified": len(changes.get("file_changes", [])),
                 "configurations_updated": len(changes.get("config_updates", [])),

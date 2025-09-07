@@ -26,13 +26,18 @@ def analyze_terraform_configuration(config_path: str, environment: str = "produc
     try:
         # Check if path exists
         if not os.path.exists(config_path):
-            return {"status": "error", "error": f"Configuration path not found: {config_path}"}
+            return {
+                "status": "error", 
+                "error": f"Configuration path not found: {config_path}",
+                "data_source": "Terraform Configuration Analysis (Error - Path not found)"
+            }
         
         analysis_results = {
             "status": "success",
             "config_path": config_path,
             "environment": environment,
             "analysis_timestamp": datetime.now().isoformat(),
+            "data_source": "Terraform Configuration Analysis (Static Analysis)",
             "findings": [],
             "recommendations": [],
             "cost_optimization_opportunities": [],
@@ -44,7 +49,11 @@ def analyze_terraform_configuration(config_path: str, environment: str = "produc
         tf_files = list(Path(config_path).rglob("*.tf"))
         
         if not tf_files:
-            return {"status": "error", "error": "No Terraform files found in the specified path"}
+            return {
+                "status": "error", 
+                "error": "No Terraform files found in the specified path",
+                "data_source": "Terraform Configuration Analysis (Error - No files found)"
+            }
         
         # Analyze each Terraform file
         for tf_file in tf_files:
@@ -78,7 +87,11 @@ def analyze_terraform_configuration(config_path: str, environment: str = "produc
         return analysis_results
         
     except Exception as e:
-        return {"status": "error", "error": f"Terraform analysis failed: {str(e)}"}
+        return {
+            "status": "error", 
+            "error": f"Terraform analysis failed: {str(e)}",
+            "data_source": "Terraform Configuration Analysis (Error - Analysis failed)"
+        }
 
 
 @tool
@@ -113,6 +126,7 @@ def validate_cloudformation_template(template_path: str, environment: str = "pro
             "template_format": "JSON",
             "environment": environment,
             "validation_timestamp": datetime.now().isoformat(),
+            "data_source": "CloudFormation Template Analysis (Static Analysis)",
             "template_info": {
                 "aws_template_format_version": template.get("AWSTemplateFormatVersion"),
                 "description": template.get("Description", "No description provided"),
@@ -157,6 +171,7 @@ def scan_infrastructure_drift(resource_type: str, terraform_state_path: str = No
             "resource_type": resource_type,
             "region": region,
             "scan_timestamp": datetime.now().isoformat(),
+            "data_source": "Infrastructure Drift Analysis (Mock Data - Real AWS API integration needed)",
             "drift_detected": [],
             "compliant_resources": [],
             "recommendations": []

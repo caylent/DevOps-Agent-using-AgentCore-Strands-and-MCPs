@@ -48,12 +48,16 @@ def generate_document(
             data = {
                 "title": title,
                 "content": content,
+                "data_source": "Document Generation (User-provided content)",
                 "generated_at": datetime.now().isoformat(),
                 "document_type": document_type
             }
         else:
             # If content is already structured, use it directly
             data = content
+            # Ensure data source is present
+            if "data_source" not in data:
+                data["data_source"] = "Document Generation (Structured data)"
         
         # Save based on format
         if format.lower() == "markdown":
@@ -67,7 +71,8 @@ def generate_document(
         else:
             return {
                 "status": "error",
-                "error": f"Unsupported format: {format}. Supported formats: markdown, json, csv, excel"
+                "error": f"Unsupported format: {format}. Supported formats: markdown, json, csv, excel",
+                "data_source": "Document Generation (Error - Unsupported format)"
             }
         
         if result["status"] == "success":
@@ -77,13 +82,16 @@ def generate_document(
                 "format": format,
                 "generated_at": datetime.now().isoformat()
             }
+            # Add data source to the result
+            result["data_source"] = data.get("data_source", "Document Generation (Generated content)")
         
         return result
         
     except Exception as e:
         return {
             "status": "error",
-            "error": f"Document generation failed: {str(e)}"
+            "error": f"Document generation failed: {str(e)}",
+            "data_source": "Document Generation (Error - Generation failed)"
         }
 
 

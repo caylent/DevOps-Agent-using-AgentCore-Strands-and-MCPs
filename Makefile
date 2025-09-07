@@ -286,6 +286,10 @@ example-cdk-pricing: ## Run CDK pricing focused demo
 	@echo "💰 Running CDK pricing focused demo..."
 	@python docs/demos/demo_cdk_pricing_simple.py
 
+example-data-sources: ## Run data sources focused demo
+	@echo "📊 Running data sources focused demo..."
+	@python docs/demos/demo_data_sources_simple.py
+
 example-report: ## Run document generation example
 	@echo "📄 Running document generation example..."
 	make query QUERY="Generate a cost analysis report for my AWS infrastructure"
