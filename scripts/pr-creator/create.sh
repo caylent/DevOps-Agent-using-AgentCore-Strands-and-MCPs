@@ -39,7 +39,9 @@ if [[ -f "$TEMPLATE_PATH" ]]; then
   cat "$TEMPLATE_PATH" > "$TMP_BODY"
   # Auto-complete Summary if last commit has body
   if [[ -n "$LAST_COMMIT_BODY" ]]; then
-    sed -i "s/<!-- Describe what this PR does and why -->/$LAST_COMMIT_BODY/" "$TMP_BODY"
+    # Escape special characters for sed
+    ESCAPED_BODY=$(printf '%s\n' "$LAST_COMMIT_BODY" | sed 's/[[\.*^$()+?{|]/\\&/g')
+    sed -i "s/<!-- Describe what this PR does and why -->/$ESCAPED_BODY/" "$TMP_BODY"
   fi
 else
   # minimal fallback if template doesn't exist
