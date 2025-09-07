@@ -24,6 +24,24 @@ from .config.safety_config import get_safety_config, requires_consent, get_conse
 # Import all our AWS DevOps tools
 from .tools import *
 
+# Import security tools specifically
+from .tools.aws_security import (
+    analyze_security_hub_findings,
+    get_security_insights,
+    analyze_security_posture,
+    analyze_config_compliance,
+    get_compliance_details,
+    check_resource_compliance,
+    analyze_inspector_findings,
+    get_vulnerability_assessment,
+    check_security_vulnerabilities,
+    get_trusted_advisor_checks,
+    analyze_trusted_advisor_recommendations,
+    get_security_recommendations,
+    perform_comprehensive_security_analysis,
+    generate_security_report
+)
+
 
 class KeyboardInterruptHandler:
     """Handle double Ctrl+C to exit, single Ctrl+C to clear line"""
@@ -143,6 +161,22 @@ class AWSDevOpsAgentV2:
             generate_compliance_report,
             scan_security_vulnerabilities,
             
+            # Real AWS Security Analysis Tools
+            analyze_security_hub_findings,
+            get_security_insights,
+            analyze_security_posture,
+            analyze_config_compliance,
+            get_compliance_details,
+            check_resource_compliance,
+            analyze_inspector_findings,
+            get_vulnerability_assessment,
+            check_security_vulnerabilities,
+            get_trusted_advisor_checks,
+            analyze_trusted_advisor_recommendations,
+            get_security_recommendations,
+            perform_comprehensive_security_analysis,
+            generate_security_report,
+            
             # Multi-Account Management Tools
             generate_multi_account_report,
             
@@ -200,11 +234,14 @@ Cuando analices proyectos Terraform, usa toda la información disponible del pla
 - Best practices y recomendaciones de seguridad
 - Análisis de cumplimiento de estándares
 
-🔒 SEGURIDAD Y COMPLIANCE:
+🔒 SEGURIDAD Y COMPLIANCE (REAL AWS APIs):
+- Análisis REAL de Security Hub con findings de seguridad en tiempo real
+- Compliance REAL con AWS Config y reglas de configuración
+- Vulnerabilidades REALES con Amazon Inspector
+- Recomendaciones REALES de AWS Trusted Advisor
+- Análisis integral de postura de seguridad combinando todos los servicios
 - Validación contra estándares SOC2, HIPAA, PCI-DSS, ISO27001
-- Escaneo de vulnerabilidades de seguridad
-- Análisis de políticas y configuraciones
-- Reportes de compliance ejecutivos
+- Reportes de compliance ejecutivos con datos reales de AWS
 
 🌐 GESTIÓN MULTI-CUENTA:
 - Operaciones cross-account en organizaciones AWS
@@ -617,7 +654,7 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
             "agent_ready": self.agent is not None,
             "model": self.config.model.model_id,
             "aws_region": self.config.aws_region,
-            "tools_count": 48,  # Total tools available (20 + 11 MCP AWS tools + 4 CDK tools + 5 Terraform tools + 8 reporting tools)
+            "tools_count": 65,  # Total tools available (20 + 11 MCP AWS tools + 4 CDK tools + 5 Terraform tools + 8 reporting tools + 17 security tools)
             "capabilities": [
                 "Cost optimization",
                 "IaC analysis (Terraform, CloudFormation, CDK)", 

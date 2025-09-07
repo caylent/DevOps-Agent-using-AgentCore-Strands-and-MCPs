@@ -6,6 +6,7 @@ from .aws_cost import *
 from .aws_iac import *
 from .aws_cdk import *
 from .aws_terraform import *
+from .aws_security import *
 from .aws_compliance import *
 from .github import *
 from .reporting import *

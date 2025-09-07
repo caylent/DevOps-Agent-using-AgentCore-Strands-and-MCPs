@@ -270,6 +270,18 @@ example-terraform: ## Run Terraform analysis example
 	@echo "🏗️ Running Terraform analysis example..."
 	make query QUERY="Analyze my Terraform project for cost optimization and security issues"
 
+example-security: ## Run AWS security analysis example
+	@echo "🛡️ Running AWS security analysis example..."
+	@python docs/demos/demo_aws_security_analysis.py
+
+example-security-hub: ## Run Security Hub focused demo
+	@echo "🔍 Running Security Hub focused demo..."
+	@python docs/demos/demo_security_hub_simple.py
+
+example-trusted-advisor: ## Run Trusted Advisor focused demo
+	@echo "💡 Running Trusted Advisor focused demo..."
+	@python docs/demos/demo_trusted_advisor_simple.py
+
 example-report: ## Run document generation example
 	@echo "📄 Running document generation example..."
 	make query QUERY="Generate a cost analysis report for my AWS infrastructure"
