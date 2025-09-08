@@ -5,6 +5,7 @@ Access to actual running AWS resources using the official MCP Python SDK
 
 import json
 import os
+import boto3
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from strands import tool
@@ -977,7 +978,6 @@ def _identify_cost_optimizations(cost_analysis: Dict[str, Any]) -> List[Dict[str
 def _find_old_rds_snapshots(region: str, age_threshold_days: int) -> List[Dict]:
     """Find old RDS snapshots"""
     try:
-        import boto3
         rds = boto3.client('rds', region_name=region)
         snapshots_response = rds.describe_db_snapshots(SnapshotType='manual')
         
@@ -1009,7 +1009,6 @@ def _find_old_rds_snapshots(region: str, age_threshold_days: int) -> List[Dict]:
 def _find_old_stopped_instances(region: str, age_threshold_days: int) -> List[Dict]:
     """Find EC2 instances that have been stopped for a long time"""
     try:
-        import boto3
         ec2 = boto3.client('ec2', region_name=region)
         instances_response = ec2.describe_instances(
             Filters=[{'Name': 'instance-state-name', 'Values': ['stopped']}]

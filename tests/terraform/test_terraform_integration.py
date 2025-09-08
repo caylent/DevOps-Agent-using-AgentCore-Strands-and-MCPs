@@ -98,7 +98,7 @@ output "security_group_id" {
     def test_agent_initialization_with_terraform_tools(self):
         """Test that agent initializes with Terraform tools"""
         try:
-            self.agent = AWSDevOpsAgentV2()
+            self.agent = AWSDevOpsAgentV2(interactive_account_selection=False)
             assert self.agent is not None
             print("✅ Agent initialized with Terraform tools")
             
@@ -116,7 +116,7 @@ output "security_group_id" {
     def test_terraform_tools_available(self):
         """Test that Terraform tools are available in the agent"""
         try:
-            self.agent = AWSDevOpsAgentV2()
+            self.agent = AWSDevOpsAgentV2(interactive_account_selection=False)
             
             # Check that Terraform tools are available
             # Note: We can't directly access tools from the Strands agent
@@ -145,7 +145,7 @@ output "security_group_id" {
     async def test_terraform_analysis_conversation(self):
         """Test Terraform analysis through agent conversation"""
         try:
-            self.agent = AWSDevOpsAgentV2()
+            self.agent = AWSDevOpsAgentV2(interactive_account_selection=False)
             
             # Test conversation about Terraform analysis
             message = f"Analyze my Terraform project at {self.test_dir} for optimization opportunities"
@@ -156,12 +156,12 @@ output "security_group_id" {
             
             result = analyze_terraform_project(self.test_dir, "production")
             
-            # The result should indicate that Terraform CLI is not found (expected in test)
+            # The result should indicate that no plan files are found (expected in test)
             # or provide analysis results
             assert result["status"] in ["success", "error"]
             
             if result["status"] == "error":
-                assert "Terraform CLI not found" in result["error"] or "Project path does not exist" in result["error"]
+                assert "No Terraform plan found" in result["error"] or "Project path does not exist" in result["error"]
                 print("✅ Terraform analysis handles missing CLI correctly")
             else:
                 print("✅ Terraform analysis completed successfully")
@@ -173,7 +173,7 @@ output "security_group_id" {
     def test_terraform_validation_conversation(self):
         """Test Terraform validation through agent conversation"""
         try:
-            self.agent = AWSDevOpsAgentV2()
+            self.agent = AWSDevOpsAgentV2(interactive_account_selection=False)
             
             # Test conversation about Terraform validation
             message = f"Validate my Terraform configuration at {self.test_dir}"
@@ -200,7 +200,7 @@ output "security_group_id" {
     def test_terraform_optimization_report_conversation(self):
         """Test Terraform optimization report through agent conversation"""
         try:
-            self.agent = AWSDevOpsAgentV2()
+            self.agent = AWSDevOpsAgentV2(interactive_account_selection=False)
             
             # Test conversation about Terraform optimization report
             message = f"Generate an optimization report for my Terraform project at {self.test_dir}"
@@ -247,7 +247,7 @@ def test_terraform_tools_in_main_agent():
     print("🧪 Testing Terraform tools integration in main agent...")
     
     try:
-        agent = AWSDevOpsAgentV2()
+        agent = AWSDevOpsAgentV2(interactive_account_selection=False)
         
         # Check agent status
         status = agent.get_status()

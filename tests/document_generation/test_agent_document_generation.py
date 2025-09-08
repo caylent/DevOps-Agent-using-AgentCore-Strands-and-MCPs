@@ -5,11 +5,13 @@ Test Agent Document Generation
 
 import os
 import sys
+import pytest
 from pathlib import Path
 
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
+@pytest.mark.asyncio
 async def test_agent_document_generation():
     """Test document generation through the agent"""
     print("🧪 Testing Agent Document Generation")
@@ -19,7 +21,7 @@ async def test_agent_document_generation():
         from aws_devops_agent.main import AWSDevOpsAgentV2
         
         # Initialize agent
-        agent = AWSDevOpsAgentV2()
+        agent = AWSDevOpsAgentV2(interactive_account_selection=False)
         
         # Test 1: Simple document generation request
         print("\n1️⃣ Testing simple document generation...")
