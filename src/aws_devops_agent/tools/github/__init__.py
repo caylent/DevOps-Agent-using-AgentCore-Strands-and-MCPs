@@ -1,15 +1,17 @@
-"""GitHub Integration Tools"""
+"""GitHub Integration Tools - MCP Client Based"""
 
 from .integration import (
-    create_optimization_pull_request,
-    update_iac_via_github,
-    list_infrastructure_repositories,
-    monitor_infrastructure_prs
+    # MCP wrapper functions
+    check_repository_connectivity,
+    create_branch_simple, 
+    get_repository_info,
+    list_repository_branches
 )
 
 __all__ = [
-    "create_optimization_pull_request",
-    "update_iac_via_github",
-    "list_infrastructure_repositories",
-    "monitor_infrastructure_prs"
+    # MCP wrapper functions
+    "check_repository_connectivity",
+    "create_branch_simple", 
+    "get_repository_info",
+    "list_repository_branches"
 ]
