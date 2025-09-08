@@ -1,37 +1,37 @@
-## =İ Summary
+## ğŸ“ Summary
 
 <!-- Describe what this PR does and why -->
 
-## <¯ Type of Change
+## ğŸ”„ Type of Change
 
-- [ ] = Bug fix
-- [ ] ( New feature
-- [ ] =¥ Breaking change
-- [ ] =Ú Documentation update
-- [ ] =' Refactoring
-- [ ] >ê Tests
+- [ ] ğŸ› Bug fix
+- [ ] âœ¨ New feature
+- [ ] ğŸ’¥ Breaking change
+- [ ] ğŸ“š Documentation update
+- [ ] â™»ï¸ Refactoring
+- [ ] ğŸ§ª Tests
 
-## >ê Testing
+## ğŸ§ª Testing
 
 - [ ] Tests added/updated
 - [ ] Manual testing completed
 - [ ] All tests pass
 
-## =Ë Checklist
+## âœ… Checklist
 
 - [ ] Code follows project conventions
 - [ ] Self-review completed
 - [ ] Documentation updated (if needed)
 - [ ] Backward compatible (or breaking changes documented)
 
-## = Related Issues
+## ğŸ”— Related Issues
 
 <!-- Link any related issues: Fixes #123, Closes #456 -->
 
-## =€ Deployment Notes
+## ğŸš€ Deployment Notes
 
 <!-- Any special deployment considerations, rollout strategy, etc. -->
 
-## =ø Screenshots (if applicable)
+## ğŸ“¸ Screenshots (if applicable)
 
 <!-- Add screenshots for UI changes -->
