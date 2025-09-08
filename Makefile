@@ -26,6 +26,16 @@ run: ## Run the agent (interactive mode) - MAIN COMMAND
 		python3 main.py --mode interactive; \
 	fi
 
+run-no-account-selection: ## Run the agent without interactive account selection
+	@echo "🚀 Starting AWS DevOps Agent (no account selection)..."
+	@if [ -n "$$VIRTUAL_ENV" ]; then \
+		echo "✅ Using virtual environment: $$VIRTUAL_ENV"; \
+		python main.py --mode interactive --no-account-selection; \
+	else \
+		echo "⚠️  No virtual environment detected. Using system Python..."; \
+		python3 main.py --mode interactive --no-account-selection; \
+	fi
+
 dev: ## Run in demo mode
 	@echo "🎭 Starting AWS DevOps Agent in demo mode..."
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
@@ -57,7 +67,8 @@ mcp-check: ## Check if MCP servers are installed
 		echo "✅ uv is available"; \
 		echo ""; \
 		echo "Checking installed MCP servers:"; \
-		uv tool list 2>/dev/null | grep -E "(cost-explorer|cloudwatch|aws-pricing)" || echo "❌ No AWS MCP servers found"; \
+		uv tool list 2>/dev/null | grep -E "(cost-explorer|cloudwatch|aws-pricing|terraform|dynamodb)" || echo "❌ No AWS MCP servers found"; \
+		echo "Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)"; \
 	else \
 		echo "❌ uv not available. Install with: curl -LsSf https://astral.sh/uv/install.sh \| sh"; \
 	fi
@@ -71,6 +82,11 @@ mcp-install: ## Install AWS MCP servers (recommended for production)
 		uv tool install awslabs.cloudwatch-mcp-server@latest || echo "⚠️  Failed to install cloudwatch-mcp-server"; \
 		echo "Installing aws-pricing-mcp-server..."; \
 		uv tool install awslabs.aws-pricing-mcp-server@latest || echo "⚠️  Failed to install aws-pricing-mcp-server"; \
+		echo "Installing terraform-mcp-server..."; \
+		uv tool install awslabs.terraform-mcp-server@latest || echo "⚠️  Failed to install terraform-mcp-server"; \
+		echo "Installing dynamodb-mcp-server..."; \
+		uv tool install awslabs.dynamodb-mcp-server@latest || echo "⚠️  Failed to install dynamodb-mcp-server"; \
+		echo "Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)"; \
 		echo ""; \
 		echo "✅ MCP installation completed"; \
 		echo "💡 Run 'make mcp-check' to verify installation"; \
@@ -88,6 +104,11 @@ mcp-run: ## Run MCP servers directly (recommended for development)
 		uvx awslabs.cloudwatch-mcp-server@latest & \
 		echo "Starting aws-pricing-mcp-server..."; \
 		uvx awslabs.aws-pricing-mcp-server@latest & \
+		echo "Starting terraform-mcp-server..."; \
+		uvx awslabs.terraform-mcp-server@latest & \
+		echo "Starting dynamodb-mcp-server..."; \
+		uvx awslabs.dynamodb-mcp-server@latest & \
+		echo "Note: GitHub MCP server requires Docker: ghcr.io/github/github-mcp-server"; \
 		echo ""; \
 		echo "✅ MCP servers started in background"; \
 		echo "💡 Use 'make mcp-stop' to stop all servers"; \
@@ -101,6 +122,9 @@ mcp-stop: ## Stop all running MCP servers
 	@pkill -f "cost-explorer-mcp-server" || true
 	@pkill -f "cloudwatch-mcp-server" || true
 	@pkill -f "aws-pricing-mcp-server" || true
+	@pkill -f "terraform-mcp-server" || true
+	@pkill -f "dynamodb-mcp-server" || true
+	@echo "Note: GitHub MCP server runs in Docker, stop manually if needed"
 	@echo "✅ MCP servers stopped"
 
 mcp-test: ## Test MCP server connections
@@ -115,7 +139,7 @@ mcp-test: ## Test MCP server connections
 # SETUP & INSTALLATION
 # =============================================================================
 
-setup: ## Complete setup: create venv, install deps, install MCP servers
+setup: ## Complete setup: create venv, install deps, install MCP servers, install AgentCore
 	@echo "🔧 Setting up AWS DevOps Agent..."
 	@echo "1️⃣ Creating virtual environment..."
 	python3 -m venv .venv
@@ -123,12 +147,17 @@ setup: ## Complete setup: create venv, install deps, install MCP servers
 	.venv/bin/pip install --upgrade pip
 	.venv/bin/pip install -r requirements.txt
 	.venv/bin/pip install -r requirements_dev.txt
-	@echo "3️⃣ Installing AWS MCP servers..."
+	@echo "3️⃣ Installing Bedrock AgentCore CLI..."
+	.venv/bin/pip install bedrock-agentcore
+	@echo "4️⃣ Installing AWS MCP servers..."
 	@if command -v uvx >/dev/null 2>&1; then \
 		echo "Installing MCP servers..."; \
 		uv tool install awslabs.cost-explorer-mcp-server@latest || echo "⚠️  Failed to install cost-explorer-mcp-server"; \
 		uv tool install awslabs.cloudwatch-mcp-server@latest || echo "⚠️  Failed to install cloudwatch-mcp-server"; \
 		uv tool install awslabs.aws-pricing-mcp-server@latest || echo "⚠️  Failed to install aws-pricing-mcp-server"; \
+		uv tool install awslabs.terraform-mcp-server@latest || echo "⚠️  Failed to install terraform-mcp-server"; \
+		uv tool install awslabs.dynamodb-mcp-server@latest || echo "⚠️  Failed to install dynamodb-mcp-server"; \
+		echo "Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)"; \
 		echo "✅ MCP installation attempt completed"; \
 	else \
 		echo "⚠️  uvx not available. MCP servers not installed"; \
@@ -137,6 +166,7 @@ setup: ## Complete setup: create venv, install deps, install MCP servers
 	fi
 	@echo "✅ Setup complete!"
 	@echo "💡 Run 'source .venv/bin/activate' then 'make run'"
+	@echo "🚀 For AgentCore deployment: 'make agentcore-configure' then 'make agentcore-deploy'"
 
 install: ## Install dependencies only (if venv exists)
 	@if [ -f .venv/bin/activate ]; then \
@@ -182,16 +212,234 @@ format: ## Format code
 	@echo "✅ Code formatted"
 
 # =============================================================================
-# DEPLOYMENT
+# BEDROCK AGENTCORE DEPLOYMENT
 # =============================================================================
 
-deploy: ## Deploy to Bedrock Agent Core
-	@echo "🚀 Deploying to Bedrock Agent Core..."
-	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		python deployment/bedrock/app.py; \
+agentcore-install: ## Install Bedrock AgentCore CLI in virtual environment
+	@echo "🔧 Installing Bedrock AgentCore CLI..."
+	@if [ -f .venv/bin/activate ]; then \
+		.venv/bin/pip install bedrock-agentcore; \
+		echo "✅ Bedrock AgentCore CLI installed"; \
 	else \
-		python3 deployment/bedrock/app.py; \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
 	fi
+
+agentcore-env-dev: ## Create development .env file
+	@echo "🔧 Creating development .env file..."
+	@cd deployment/bedrock && \
+	cp env.example .env && \
+	sed -i.bak 's/DEBUG_MODE=false/DEBUG_MODE=true/' .env && \
+	sed -i.bak 's/LOG_LEVEL=INFO/LOG_LEVEL=DEBUG/' .env && \
+	sed -i.bak 's/HOST=0.0.0.0/HOST=localhost/' .env && \
+	rm .env.bak 2>/dev/null || true && \
+	echo "✅ Development .env file created"
+
+agentcore-env-prod: ## Create production .env file
+	@echo "🔧 Creating production .env file..."
+	@cd deployment/bedrock && \
+	cp env.example .env && \
+	sed -i.bak 's/DEBUG_MODE=false/DEBUG_MODE=false/' .env && \
+	sed -i.bak 's/LOG_LEVEL=INFO/LOG_LEVEL=WARNING/' .env && \
+	sed -i.bak 's/HOST=0.0.0.0/HOST=0.0.0.0/' .env && \
+	rm .env.bak 2>/dev/null || true && \
+	echo "✅ Production .env file created"
+
+agentcore-env-staging: ## Create staging .env file
+	@echo "🔧 Creating staging .env file..."
+	@cd deployment/bedrock && \
+	cp env.example .env && \
+	sed -i.bak 's/DEBUG_MODE=false/DEBUG_MODE=false/' .env && \
+	sed -i.bak 's/LOG_LEVEL=INFO/LOG_LEVEL=INFO/' .env && \
+	sed -i.bak 's/HOST=0.0.0.0/HOST=0.0.0.0/' .env && \
+	rm .env.bak 2>/dev/null || true && \
+	echo "✅ Staging .env file created"
+
+agentcore-configure: ## Configure AgentCore for production deployment
+	@echo "⚙️  Configuring Bedrock AgentCore..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		if [ ! -f .env ]; then \
+			echo "📋 Creating .env file from template..."; \
+			cp env.example .env; \
+			echo "✅ Created .env file - please customize it for your environment"; \
+		else \
+			echo "✅ .env file already exists"; \
+		fi; \
+		echo ""; \
+		echo "📋 AgentCore configuration:"; \
+		echo "  - Entrypoint: app.py"; \
+		echo "  - Environment file: .env"; \
+		echo "  - Agent: AWS DevOps Agent"; \
+		echo ""; \
+		echo "⚠️  IMPORTANT: All values in .env are REQUIRED - no defaults for safety"; \
+		echo "✅ AgentCore configuration completed"; \
+		echo "💡 Edit deployment/bedrock/.env to customize your settings"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-validate: ## Validate environment configuration
+	@echo "🔍 Validating environment configuration..."
+	@python3 -c "
+	import sys
+	sys.path.insert(0, 'src')
+	from aws_devops_agent.config.env_config import load_env_file, get_env_config
+	try:
+		load_env_file()
+		config = get_env_config(strict_validation=True)
+		print('✅ Environment configuration is valid')
+		print(f'   AWS Region: {config.aws_region}')
+		print(f'   Model ID: {config.bedrock_model_id}')
+		print(f'   Server: {config.host}:{config.port}')
+		print(f'   Debug Mode: {config.debug_mode}')
+		warnings = config.validate_configuration()
+		if warnings:
+			print('\\n⚠️  Configuration warnings:')
+			for warning in warnings:
+				print(f'   - {warning}')
+		else:
+			print('\\n✅ No configuration warnings')
+	except Exception as e:
+		print(f'❌ Configuration validation failed: {e}')
+		exit(1)
+	"
+
+agentcore-test-local: ## Test AgentCore deployment locally
+	@echo "🧪 Testing AgentCore deployment locally..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		if [ ! -f .env ]; then \
+			echo "📋 Creating .env file for local testing..."; \
+			cp ../../docs/env.example .env; \
+			sed -i.bak 's/DEBUG_MODE=false/DEBUG_MODE=true/' .env; \
+			sed -i.bak 's/HOST=0.0.0.0/HOST=localhost/' .env; \
+			rm .env.bak 2>/dev/null || true; \
+		fi; \
+		../../.venv/bin/python app.py; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-deploy-verify: ## Human verification for production deployment
+	@echo "🔒 DEPLOYMENT VERIFICATION REQUIRED"
+	@echo "=================================="
+	@echo "⚠️  CRITICAL: This will deploy to PRODUCTION"
+	@echo ""
+	@echo "📋 Current Configuration:"
+	@echo "  - Agent: AWS DevOps Agent"
+	@echo "  - Environment: PRODUCTION"
+	@echo "  - Region: $$(aws configure get region 2>/dev/null || echo 'us-east-1')"
+	@echo "  - Account: $$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo 'Not configured')"
+	@echo ""
+	@read -p "❓ Are you authorized to deploy to PRODUCTION? (yes/no): " auth_confirm; \
+	if [ "$$auth_confirm" != "yes" ]; then \
+		echo "❌ Deployment aborted - unauthorized"; \
+		exit 1; \
+	fi
+	@read -p "❓ Have you reviewed the deployment configuration? (yes/no): " config_confirm; \
+	if [ "$$config_confirm" != "yes" ]; then \
+		echo "❌ Deployment aborted - configuration not reviewed"; \
+		exit 1; \
+	fi
+	@read -p "❓ Are you ready to proceed with PRODUCTION deployment? (yes/no): " final_confirm; \
+	if [ "$$final_confirm" != "yes" ]; then \
+		echo "❌ Deployment aborted - not ready"; \
+		exit 1; \
+	fi
+	@echo "✅ All verifications passed - proceeding with deployment"
+
+agentcore-deploy: agentcore-deploy-verify ## Deploy to Bedrock AgentCore (PRODUCTION)
+	@echo "🚀 Deploying to Bedrock AgentCore (PRODUCTION)..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		if [ ! -f .env ]; then \
+			echo "📋 Creating .env file for production deployment..."; \
+			cp ../../docs/env.example .env; \
+			sed -i.bak 's/DEBUG_MODE=false/DEBUG_MODE=false/' .env; \
+			sed -i.bak 's/HOST=0.0.0.0/HOST=0.0.0.0/' .env; \
+			rm .env.bak 2>/dev/null || true; \
+		fi; \
+		../../.venv/bin/python app.py; \
+		echo "✅ Deployment completed"; \
+		echo "💡 Run 'make agentcore-status' to check deployment status"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-status: ## Check AgentCore deployment status
+	@echo "📊 Checking AgentCore deployment status..."
+	@if [ -f .venv/bin/activate ]; then \
+		echo "🔍 AgentCore Status:"; \
+		echo "  - Agent: AWS DevOps Agent"; \
+		echo "  - Model: $${BEDROCK_MODEL_ID:-claude-3.5-sonnet}"; \
+		echo "  - Debug Mode: $${DEBUG_MODE:-false}"; \
+		echo "  - Port: $${PORT:-8080}"; \
+		echo "  - Host: $${HOST:-0.0.0.0}"; \
+		echo ""; \
+		echo "💡 To test the agent, use: make agentcore-test"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-logs: ## View AgentCore deployment logs
+	@echo "📝 AgentCore logs are displayed in the console when running"
+	@echo "💡 To see logs, run the agent with: make agentcore-test-local or make agentcore-deploy"
+
+agentcore-test: ## Test deployed AgentCore agent
+	@echo "🧪 Testing AgentCore agent..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		echo "🧪 Testing agent with sample query..."; \
+		curl -X POST http://localhost:8080/invoke \
+			-H "Content-Type: application/json" \
+			-d '{"prompt": "What are your capabilities?"}' \
+			2>/dev/null || echo "❌ Agent not running. Start with: make agentcore-test-local"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-rollback: ## Rollback AgentCore deployment (with verification)
+	@echo "🔄 ROLLBACK PROCEDURE"
+	@echo "===================="
+	@echo "⚠️  WARNING: This will stop the production deployment"
+	@echo ""
+	@read -p "❓ Are you sure you want to stop the agent? (yes/no): " rollback_confirm; \
+	if [ "$$rollback_confirm" != "yes" ]; then \
+		echo "❌ Rollback aborted"; \
+		exit 1; \
+	fi
+	@echo "🔄 Stopping agent..."
+	@pkill -f "python.*app.py" || echo "No running agent found"
+	@echo "✅ Agent stopped"
+
+agentcore-monitor: ## Monitor AgentCore deployment performance
+	@echo "🔍 Monitoring AgentCore deployment..."
+	@if [ -f .venv/bin/activate ]; then \
+		echo "📊 Agent Status:"; \
+		make agentcore-status; \
+		echo ""; \
+		echo "🧪 Testing Agent Functionality:"; \
+		make agentcore-test; \
+		echo ""; \
+		echo "💡 For detailed logs, check the console output when running the agent"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+# =============================================================================
+# DEPLOYMENT (Legacy - kept for compatibility)
+# =============================================================================
+
+deploy: ## Deploy to Bedrock Agent Core (legacy - use agentcore-deploy)
+	@echo "⚠️  Using legacy deploy command. Consider using 'make agentcore-deploy'"
+	@make agentcore-deploy
 
 # =============================================================================
 # UTILITIES

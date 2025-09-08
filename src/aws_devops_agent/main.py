@@ -20,6 +20,7 @@ from strands import Agent
 from strands.session.file_session_manager import FileSessionManager
 from .config import get_config
 from .config.safety_config import get_safety_config, requires_consent, get_consent_message
+from .config.aws_account_manager import get_aws_account_manager
 
 # Import all our AWS DevOps tools
 from .tools import *
@@ -72,18 +73,43 @@ class AWSDevOpsAgentV2:
     Integrates Strands SDK with comprehensive AWS DevOps tools
     """
     
-    def __init__(self, session_id=None):
+    def __init__(self, session_id=None, interactive_account_selection=True):
         print("🚀 AWS DevOps Agent v2 - Production Ready")
         print("   Using Strands SDK + AWS DevOps Tools + MCP Integration")
         
         # Load configuration
         self.config = get_config()
         
+        # Setup AWS account management
+        self.account_manager = get_aws_account_manager(
+            region=self.config.aws_region, 
+            profile=self.config.aws_profile
+        )
+        
+        # Handle account selection
+        if interactive_account_selection:
+            self.selected_account = self.account_manager.interactive_account_selection()
+        else:
+            # Use environment variables or detect current account
+            if self.config.aws_account_id:
+                self.selected_account = self.account_manager.add_account(
+                    self.config.aws_account_id,
+                    self.config.aws_account_name,
+                    self.config.aws_role_arn
+                )
+            else:
+                self.selected_account = self.account_manager.detect_current_account()
+        
         # Setup session management
         self.session_id = self._setup_session(session_id)
         self.safety_config = get_safety_config()
+        
         print(f"   📋 Model: {self.config.model.model_id}")
         print(f"   🌍 Region: {self.config.aws_region}")
+        if self.selected_account:
+            print(f"   🏢 Account: {self.selected_account.account_id} ({self.selected_account.account_name or 'No name'})")
+        else:
+            print(f"   🏢 Account: Using environment variables")
         print(f"   🔒 Safety: Explicit consent required for all dangerous actions")
         
         # Initialize agent
@@ -94,6 +120,117 @@ class AWSDevOpsAgentV2:
         """Get the project-local sessions directory"""
         project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         return os.path.join(project_root, ".sessions")
+    
+    def _show_accounts(self):
+        """Show all managed AWS accounts"""
+        print("\n🏢 Managed AWS Accounts")
+        print("=" * 40)
+        
+        accounts = self.account_manager.list_accounts()
+        if not accounts:
+            print("No accounts managed yet")
+            return
+        
+        for i, account in enumerate(accounts, 1):
+            status_icon = "✅" if account.status == "active" else "❌"
+            current_marker = " (CURRENT)" if account.is_current else ""
+            print(f"{i}. {status_icon} {account.account_id} ({account.account_name or 'No name'}){current_marker}")
+            print(f"   Region: {account.region}")
+            print(f"   Status: {account.status}")
+            if account.permissions:
+                print(f"   Permissions: {', '.join(account.permissions)}")
+            print()
+    
+    def _switch_account(self):
+        """Switch to a different AWS account"""
+        print("\n🔄 Switch AWS Account")
+        print("=" * 30)
+        
+        accounts = self.account_manager.list_accounts()
+        if not accounts:
+            print("No accounts managed yet. Use the startup account selection to add accounts.")
+            return
+        
+        print("Available accounts:")
+        for i, account in enumerate(accounts, 1):
+            status_icon = "✅" if account.status == "active" else "❌"
+            current_marker = " (CURRENT)" if account.is_current else ""
+            print(f"{i}. {status_icon} {account.account_id} ({account.account_name or 'No name'}){current_marker}")
+        
+        try:
+            choice = input("\nEnter account number to switch to (or 'cancel'): ").strip()
+            if choice.lower() == 'cancel':
+                return
+            
+            account_index = int(choice) - 1
+            if 0 <= account_index < len(accounts):
+                selected_account = accounts[account_index]
+                
+                # Validate access
+                success, message = self.account_manager.validate_account_access(selected_account.account_id)
+                if success:
+                    self.selected_account = selected_account
+                    print(f"✅ Switched to account: {selected_account.account_id} ({selected_account.account_name or 'No name'})")
+                else:
+                    print(f"❌ Could not switch to account: {message}")
+            else:
+                print("❌ Invalid account number")
+        except ValueError:
+            print("❌ Please enter a valid number")
+        except KeyboardInterrupt:
+            print("\n👋 Cancelled")
+    
+    def _show_account_status(self):
+        """Show current account status and information"""
+        print("\n📊 Current Account Status")
+        print("=" * 30)
+        
+        if self.selected_account:
+            print(f"Account ID: {self.selected_account.account_id}")
+            print(f"Account Name: {self.selected_account.account_name or 'No name'}")
+            print(f"Region: {self.selected_account.region}")
+            print(f"Status: {self.selected_account.status}")
+            print(f"Is Current: {self.selected_account.is_current}")
+            if self.selected_account.permissions:
+                print(f"Permissions: {', '.join(self.selected_account.permissions)}")
+            if self.selected_account.last_accessed:
+                print(f"Last Accessed: {self.selected_account.last_accessed}")
+        else:
+            print("No account selected - using environment variables")
+        
+        print(f"\nAccount Manager Summary:")
+        summary = self.account_manager.get_account_summary()
+        print(f"Total Accounts: {summary['total_accounts']}")
+        print(f"Current Account: {summary['current_account'] or 'None'}")
+    
+    def _show_help(self):
+        """Show help information and available commands"""
+        print("\n🤖 AWS DevOps Agent v2 - Help")
+        print("=" * 40)
+        print("Available Commands:")
+        print("  accounts        - Show all managed AWS accounts")
+        print("  switch-account  - Switch to a different AWS account")
+        print("  account-status  - Show current account status")
+        print("  help, ?         - Show this help message")
+        print("  exit, quit, q   - Exit the application")
+        print()
+        print("Multi-line Input:")
+        print("  Type \"'''\" to enter multi-line mode for complex queries")
+        print()
+        print("AWS DevOps Capabilities:")
+        print("  💰 Cost optimization and analysis")
+        print("  🏗️  Infrastructure as Code (Terraform, CloudFormation, CDK)")
+        print("  🔒 Security and compliance analysis")
+        print("  🌐 Multi-account operations")
+        print("  📊 Real-time AWS resource monitoring")
+        print("  📄 Automated report generation")
+        print()
+        print("Example Queries:")
+        print("  'Analyze costs for the last 30 days'")
+        print("  'Review security findings in this account'")
+        print("  'Optimize EC2 instances for cost savings'")
+        print("  'Generate a compliance report for SOC2'")
+        print()
     
     def _setup_agent(self):
         """Setup the main Strands agent with all AWS DevOps tools and session management"""
@@ -424,6 +561,20 @@ Responde de manera concisa pero completa, integrando múltiples fuentes de datos
                     print("👋 Goodbye!")
                     break
                 
+                # Handle special commands
+                if user_input.lower() == 'accounts':
+                    self._show_accounts()
+                    continue
+                elif user_input.lower() == 'switch-account':
+                    self._switch_account()
+                    continue
+                elif user_input.lower() == 'account-status':
+                    self._show_account_status()
+                    continue
+                elif user_input.lower() in ['help', '?']:
+                    self._show_help()
+                    continue
+                
                 # Check for multi-line input trigger
                 if user_input == "'''":
                     user_input = self._get_multiline_input()
@@ -674,12 +825,18 @@ def main():
                        help="Run mode: interactive chat or demo scenarios")
     parser.add_argument("--query", type=str, help="Single query to process")
     parser.add_argument("--session-id", type=str, help="Session ID ('new' for new session)")
+    parser.add_argument("--no-account-selection", action="store_true",
+                       help="Skip interactive account selection (use environment variables only)")
     
     args = parser.parse_args()
     
     try:
         # Initialize agent with session management
-        agent = AWSDevOpsAgentV2(session_id=args.session_id)
+        interactive_account_selection = not args.no_account_selection
+        agent = AWSDevOpsAgentV2(
+            session_id=args.session_id, 
+            interactive_account_selection=interactive_account_selection
+        )
         
         if args.query:
             # Single query mode

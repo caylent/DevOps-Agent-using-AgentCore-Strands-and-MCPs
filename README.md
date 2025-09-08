@@ -102,7 +102,6 @@ strands-bedrock-mcp-devops-agent/
 ├── deployment/bedrock/             # 🚀 Production deployment
 │   └── app.py                      # Bedrock Agent Core app
 ├── scripts/                       # 🔧 Setup and utility scripts
-│   ├── setup_mcp_servers.py
 │   └── setup.sh
 ├── tests/                         # 🧪 Organized testing
 │   ├── unit/                      # Unit tests
@@ -135,6 +134,9 @@ pip install -r requirements.txt
 uv tool install awslabs.cost-explorer-mcp-server@latest
 uv tool install awslabs.cloudwatch-mcp-server@latest
 uv tool install awslabs.aws-pricing-mcp-server@latest
+uv tool install awslabs.terraform-mcp-server@latest
+uv tool install awslabs.dynamodb-mcp-server@latest
+# Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)
 
 # 4. Configure environment
 cp .env.example .env

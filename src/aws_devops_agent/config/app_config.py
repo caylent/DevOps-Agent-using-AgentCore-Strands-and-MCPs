@@ -1,10 +1,13 @@
 """
 Configuration for AWS DevOps Agent using Strands AI + Bedrock Agent Core
+DEPRECATED: Use env_config.py for centralized environment configuration
+This file is kept for backward compatibility
 """
 
 import os
 from dataclasses import dataclass
 from typing import Dict, List
+from .env_config import get_env_config, EnvironmentConfig
 
 
 @dataclass
@@ -89,27 +92,25 @@ class ConfigManager:
     DEFAULT_MODEL = "claude-3.5-sonnet"
 
     def load_config(self) -> AWSDevOpsConfig:
-        """Load configuration from environment."""
+        """Load configuration from environment using centralized config."""
+        # Use centralized environment configuration
+        env_config = get_env_config(strict_validation=False)  # Allow defaults for interactive mode
+        
+        # Map to legacy config structure
         model_name = os.getenv("STRANDS_MODEL", self.DEFAULT_MODEL)
         model_config = self.AVAILABLE_MODELS.get(model_name, self.AVAILABLE_MODELS[self.DEFAULT_MODEL])
 
-        # Load cross-account roles from environment
-        cross_account_roles = {}
-        if os.getenv("CROSS_ACCOUNT_ROLES"):
-            # Expected format: "account1:role1,account2:role2"
-            for account_role in os.getenv("CROSS_ACCOUNT_ROLES", "").split(","):
-                if ":" in account_role:
-                    account, role = account_role.strip().split(":", 1)
-                    cross_account_roles[account] = role
-
         return AWSDevOpsConfig(
             model=model_config,
-            mcp=AWSMCPConfig(),
-            aws_region=os.getenv("AWS_REGION", "us-east-1"),
-            aws_profile=os.getenv("AWS_PROFILE", "default"),
-            log_level=os.getenv("LOG_LEVEL", "INFO"),
-            debug_mode=os.getenv("DEBUG_MODE", "false").lower() == "true",
-            cross_account_roles=cross_account_roles or None,
+            mcp=AWSMCPConfig(
+                timeout=env_config.mcp_timeout,
+                max_workers=env_config.mcp_max_workers
+            ),
+            aws_region=env_config.aws_region,
+            aws_profile=env_config.aws_profile,
+            log_level=env_config.log_level,
+            debug_mode=env_config.debug_mode,
+            cross_account_roles=env_config.cross_account_roles or None,
         )
 
 

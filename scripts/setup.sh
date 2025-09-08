@@ -18,6 +18,9 @@ pip install -r requirements-production.txt
 echo "📦 Installing AWS MCP servers..."
 uv tool install awslabs.cost-explorer-mcp-server@latest
 uv tool install awslabs.cloudwatch-mcp-server@latest
+uv tool install awslabs.aws-pricing-mcp-server@latest
 uv tool install awslabs.terraform-mcp-server@latest
+uv tool install awslabs.dynamodb-mcp-server@latest
+# Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)
 
 echo "✅ Setup complete! Run: source .venv/bin/activate"
