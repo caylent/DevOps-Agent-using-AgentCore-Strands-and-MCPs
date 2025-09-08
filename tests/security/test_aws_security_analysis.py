@@ -7,10 +7,20 @@ Tests the new real AWS security APIs implementation
 import sys
 import os
 import asyncio
+import pytest
 from pathlib import Path
 
 # Add the src directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+
+# Check for AWS credentials
+def has_aws_credentials():
+    """Check if AWS credentials are available"""
+    return (
+        os.getenv('AWS_ACCESS_KEY_ID') or 
+        os.getenv('AWS_PROFILE') or 
+        os.path.exists(os.path.expanduser('~/.aws/credentials'))
+    )
 
 from aws_devops_agent.tools.aws_security import (
     analyze_security_hub_findings,
@@ -21,6 +31,8 @@ from aws_devops_agent.tools.aws_security import (
 )
 
 
+@pytest.mark.asyncio
+@pytest.mark.skipif(not has_aws_credentials(), reason="AWS credentials not available")
 async def test_security_hub_analysis():
     """Test Security Hub analysis"""
     print("🔍 Testing Security Hub Analysis...")
@@ -50,6 +62,8 @@ async def test_security_hub_analysis():
         return False
 
 
+@pytest.mark.asyncio
+@pytest.mark.skipif(not has_aws_credentials(), reason="AWS credentials not available")
 async def test_config_compliance():
     """Test Config compliance analysis"""
     print("\n📋 Testing Config Compliance Analysis...")
@@ -78,6 +92,8 @@ async def test_config_compliance():
         return False
 
 
+@pytest.mark.asyncio
+@pytest.mark.skipif(not has_aws_credentials(), reason="AWS credentials not available")
 async def test_inspector_analysis():
     """Test Inspector vulnerability analysis"""
     print("\n🔬 Testing Inspector Vulnerability Analysis...")
@@ -106,6 +122,8 @@ async def test_inspector_analysis():
         return False
 
 
+@pytest.mark.asyncio
+@pytest.mark.skipif(not has_aws_credentials(), reason="AWS credentials not available")
 async def test_trusted_advisor():
     """Test Trusted Advisor recommendations"""
     print("\n💡 Testing Trusted Advisor Security Recommendations...")
@@ -132,6 +150,8 @@ async def test_trusted_advisor():
         return False
 
 
+@pytest.mark.asyncio
+@pytest.mark.skipif(not has_aws_credentials(), reason="AWS credentials not available")
 async def test_comprehensive_analysis():
     """Test comprehensive security analysis"""
     print("\n🛡️ Testing Comprehensive Security Analysis...")

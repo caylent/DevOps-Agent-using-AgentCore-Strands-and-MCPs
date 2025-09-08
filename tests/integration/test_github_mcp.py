@@ -29,8 +29,11 @@ github_username = github_config.get('GITHUB_USERNAME', '')
 default_repo = github_config.get('GITHUB_DEFAULT_REPO', '')
 
 if not github_token:
-    print("❌ GitHub token not found in config/.env.github")
-    exit(1)
+    print("⚠️  GitHub token not found - skipping GitHub MCP tests")
+    print("   To enable GitHub tests, create config/.env.github with GITHUB_PERSONAL_ACCESS_TOKEN")
+    # Skip GitHub-dependent tests instead of exiting
+    import pytest
+    pytest.skip("GitHub configuration not available", allow_module_level=True)
 
 print(f"✅ GitHub token loaded (user: {github_username})")
 print(f"✅ Default repo: {default_repo}")

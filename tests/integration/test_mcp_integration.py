@@ -7,9 +7,10 @@ Verify that the official MCP client is working properly
 import asyncio
 import sys
 import os
+import pytest
 
 # Add path for our tools
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src"))
 
 try:
     from aws_devops_agent.mcp_clients.mcp_client import mcp_client
@@ -19,6 +20,7 @@ except ImportError as e:
     sys.exit(1)
 
 
+@pytest.mark.asyncio
 async def test_mcp_client():
     """Test MCP client functionality"""
     print("\n🧪 Testing Official MCP Client Integration")

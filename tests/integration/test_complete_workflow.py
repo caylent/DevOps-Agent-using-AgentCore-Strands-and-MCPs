@@ -32,8 +32,11 @@ github_token = github_config.get('GITHUB_PERSONAL_ACCESS_TOKEN')
 repo = github_config.get('GITHUB_DEFAULT_REPO', 'dpetrocelli/211125459593-iac-polyglot-infrastructure')
 
 if not github_token:
-    print("❌ GitHub token required")
-    exit(1)
+    print("⚠️  GitHub token not found - skipping GitHub integration tests")
+    print("   To enable GitHub tests, create config/.env.github with GITHUB_PERSONAL_ACCESS_TOKEN")
+    # Skip GitHub-dependent tests instead of exiting
+    import pytest
+    pytest.skip("GitHub configuration not available", allow_module_level=True)
 
 # Prepare environment
 aws_env = os.environ.copy()
