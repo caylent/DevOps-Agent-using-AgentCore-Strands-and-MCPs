@@ -1,655 +1,360 @@
 """
-GitHub Integration Tools
-Automated PR generation and repository management for infrastructure improvements
+GitHub Integration Tools - MCP Client Based
+Simple wrapper functions that use GitHub MCP Server
 """
 
-import json
-import os
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any
 from datetime import datetime
 from strands import tool
 
+# Import MCP client for GitHub MCP Server communication
+try:
+    from ...mcp_clients.mcp_client import mcp_client
+except ImportError:
+    mcp_client = None
+
 
 @tool
-def create_optimization_pull_request(
+def check_repository_connectivity(repository: str) -> Dict[str, Any]:
+    """
+    Check if we can access a GitHub repository using MCP server
+    
+    Args:
+        repository: GitHub repository (owner/repo format)
+    
+    Returns:
+        Dict containing connectivity status and repository info
+    """
+    try:
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "MCP client not available",
+                "recommendation": "Ensure GitHub MCP server is running and configured"
+            }
+        
+        # Parse repository
+        if '/' not in repository:
+            return {"status": "error", "error": "Repository must be in 'owner/repo' format"}
+        
+        owner, repo = repository.split('/', 1)
+        
+        # Get GitHub MCP client and test connectivity
+        github_client = mcp_client.get_github_client()
+        if not github_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available",
+                "recommendation": "Ensure GitHub MCP server is configured and running"
+            }
+        
+        with github_client:
+            # Test connectivity by getting basic repo info
+            result = github_client.call_tool_sync(
+                tool_use_id="test-repo-access",
+                name="get_file_contents", 
+                arguments={
+                    "owner": owner,
+                    "repo": repo,
+                    "path": "/"
+                }
+            )
+            
+            # Also get user info to verify authentication
+            user_info = github_client.call_tool_sync(
+                tool_use_id="test-auth",
+                name="get_me", 
+                arguments={}
+            )
+            
+            # Parse MCP response format
+            if result and result.get("status") == "success":
+                # Extract user info
+                user_login = "unknown"
+                if user_info and user_info.get("status") == "success" and user_info.get("content"):
+                    try:
+                        import json
+                        user_data = json.loads(user_info["content"][0]["text"])
+                        user_login = user_data.get("login", "unknown")
+                    except:
+                        pass
+                
+                return {
+                    "status": "success",
+                    "repository": repository,
+                    "accessible": True,
+                    "authenticated_user": user_login,
+                    "repository_exists": True,
+                    "test_timestamp": datetime.now().isoformat(),
+                    "mcp_server": "GitHub MCP Server"
+                }
+            else:
+                return {
+                    "status": "error",
+                    "repository": repository,
+                    "accessible": False,
+                    "error": "Cannot access repository",
+                    "recommendation": "Check repository name and permissions"
+                }
+            
+    except Exception as e:
+        return {
+            "status": "error", 
+            "error": f"Failed to check repository connectivity: {str(e)}",
+            "repository": repository
+        }
+
+
+@tool
+def create_branch_simple(
     repository: str, 
-    optimization_type: str, 
-    changes: Dict[str, Any], 
-    branch_name: str = None,
-    user_consent: bool = False
+    branch_name: str, 
+    from_branch: str = "main"
 ) -> Dict[str, Any]:
     """
-    Create a pull request with AWS optimization recommendations
-    
-    ⚠️  CRITICAL: This function requires explicit user consent!
-    ⚠️  NEVER call this function without user_consent=True
+    Create a new branch in GitHub repository using MCP server
     
     Args:
-        repository: GitHub repository (org/repo format)
-        optimization_type: Type of optimization (cost, security, compliance, etc.)
-        changes: Dictionary containing the changes to be made
-        branch_name: Custom branch name (auto-generated if None)
-        user_consent: MUST be True to proceed (safety requirement)
+        repository: GitHub repository (owner/repo format)
+        branch_name: Name for the new branch
+        from_branch: Source branch to create from (default: main)
     
     Returns:
-        Dict containing PR creation results and URL
+        Dict containing branch creation results
     """
     try:
-        # CRITICAL SAFETY CHECK - Require explicit user consent
-        if not user_consent:
+        if not mcp_client:
             return {
                 "status": "error",
-                "error": "CRITICAL: User consent required! This function cannot create PRs without explicit user approval.",
-                "safety_message": "To create a PR, the user must explicitly approve this action. Use user_consent=True parameter.",
-                "recommendation": "Ask the user: 'Do you want me to create a pull request with these optimization changes? Please confirm with explicit approval.'",
-                "data_source": "GitHub Integration (Mock Data - Real GitHub API integration needed)"
+                "error": "MCP client not available"
             }
         
-        if not branch_name:
-            branch_name = f"aws-optimization/{optimization_type.lower()}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        # Parse repository
+        if '/' not in repository:
+            return {"status": "error", "error": "Repository must be in 'owner/repo' format"}
         
-        # Prepare PR content
-        pr_title = f"AWS {optimization_type.title()} Optimization - User Approved Changes"
-        pr_body = _generate_optimization_pr_body(optimization_type, changes)
+        owner, repo = repository.split('/', 1)
         
-        # Simulate PR creation (in real implementation, this would use GitHub API)
-        pr_result = {
-            "status": "success",
-            "repository": repository,
-            "pr_number": 42,  # Simulated PR number
-            "pr_url": f"https://github.com/{repository}/pull/42",
-            "branch_name": branch_name,
-            "title": pr_title,
-            "optimization_type": optimization_type,
-            "data_source": "GitHub Integration (Mock Data - Real GitHub API integration needed)",
-            "changes_summary": {
-                "files_modified": len(changes.get("file_changes", [])),
-                "configurations_updated": len(changes.get("config_updates", [])),
-                "potential_savings": changes.get("estimated_savings", {})
-            },
-            "created_timestamp": datetime.now().isoformat(),
-            "review_required": True,
-            "automated_tests_status": "pending"
-        }
-        
-        # Add specific details based on optimization type
-        if optimization_type.lower() == "cost":
-            pr_result["cost_analysis"] = {
-                "monthly_savings": changes.get("monthly_savings", 0),
-                "annual_savings": changes.get("annual_savings", 0),
-                "affected_resources": changes.get("affected_resources", [])
-            }
-        elif optimization_type.lower() == "security":
-            pr_result["security_improvements"] = {
-                "vulnerabilities_addressed": len(changes.get("security_fixes", [])),
-                "compliance_improvements": changes.get("compliance_improvements", []),
-                "risk_reduction": changes.get("risk_reduction", "Medium")
-            }
-        elif optimization_type.lower() == "compliance":
-            pr_result["compliance_updates"] = {
-                "standards_addressed": changes.get("standards", []),
-                "controls_implemented": len(changes.get("controls", [])),
-                "compliance_score_improvement": changes.get("score_improvement", 0)
-            }
-        
-        return pr_result
-        
-    except Exception as e:
-        return {"status": "error", "error": f"Failed to create optimization PR: {str(e)}"}
-
-
-@tool
-def update_iac_via_github(
-    repository: str,
-    iac_tool: str,
-    updates: Dict[str, Any],
-    review_team: str = "platform-team",
-    user_consent: bool = False
-) -> Dict[str, Any]:
-    """
-    Update Infrastructure as Code via GitHub PR with proper reviews
-    
-    ⚠️  CRITICAL: This function requires explicit user consent!
-    ⚠️  NEVER call this function without user_consent=True
-    
-    Args:
-        repository: GitHub repository containing IaC
-        iac_tool: IaC tool (terraform, cloudformation, etc.)
-        updates: Updates to be made to IaC
-        review_team: GitHub team for PR review
-        user_consent: MUST be True to proceed (safety requirement)
-    
-    Returns:
-        Dict containing IaC update PR results
-    """
-    try:
-        # CRITICAL SAFETY CHECK - Require explicit user consent
-        if not user_consent:
+        # Get GitHub MCP client and create branch
+        github_client = mcp_client.get_github_client()
+        if not github_client:
             return {
                 "status": "error",
-                "error": "CRITICAL: User consent required! This function cannot modify IaC without explicit user approval.",
-                "safety_message": "To update IaC, the user must explicitly approve this action. Use user_consent=True parameter.",
-                "recommendation": "Ask the user: 'Do you want me to create a pull request with these IaC changes? Please confirm with explicit approval.'"
+                "error": "GitHub MCP client not available"
             }
         
-        branch_name = f"iac-updates/{iac_tool.lower()}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
-        
-        # Prepare IaC-specific PR content
-        pr_title = f"Infrastructure Update: {iac_tool.title()} Configuration Changes - User Approved"
-        pr_body = _generate_iac_pr_body(iac_tool, updates)
-        
-        # Create PR with IaC-specific handling
-        pr_result = {
-            "status": "success",
-            "repository": repository,
-            "pr_number": 43,
-            "pr_url": f"https://github.com/{repository}/pull/43",
-            "branch_name": branch_name,
-            "title": pr_title,
-            "iac_tool": iac_tool,
-            "updates_summary": {
-                "resources_modified": len(updates.get("resources", [])),
-                "configurations_changed": len(updates.get("configurations", [])),
-                "safety_checks": updates.get("safety_checks", [])
-            },
-            "review_requirements": {
-                "required_reviewers": [review_team],
-                "auto_merge_enabled": False,
-                "requires_plan_approval": iac_tool.lower() == "terraform"
-            },
-            "deployment_pipeline": {
-                "plan_step": "terraform plan" if iac_tool.lower() == "terraform" else "validate template",
-                "test_environments": ["staging", "pre-production"],
-                "approval_gates": True
-            },
-            "created_timestamp": datetime.now().isoformat()
-        }
-        
-        # Add tool-specific validations
-        if iac_tool.lower() == "terraform":
-            pr_result["terraform_specific"] = {
-                "plan_command": "terraform plan -out=tfplan",
-                "state_backend": "s3",
-                "workspace": updates.get("workspace", "default"),
-                "validation_steps": [
-                    "terraform fmt -check",
-                    "terraform validate", 
-                    "tflint",
-                    "checkov"
-                ]
-            }
-        elif iac_tool.lower() == "cloudformation":
-            pr_result["cloudformation_specific"] = {
-                "template_validation": "aws cloudformation validate-template",
-                "stack_policy": updates.get("stack_policy"),
-                "change_set_required": True,
-                "rollback_configuration": updates.get("rollback_config", {})
-            }
-        
-        return pr_result
-        
+        with github_client:
+            result = github_client.call_tool_sync(
+                tool_use_id="create-branch",
+                name="create_branch", 
+                arguments={
+                    "owner": owner,
+                    "repo": repo,
+                    "branch": branch_name,
+                    "from_branch": from_branch
+                }
+            )
+            
+            if result and result.get("status") == "success":
+                return {
+                    "status": "success",
+                    "repository": repository,
+                    "branch_name": branch_name,
+                    "from_branch": from_branch,
+                    "branch_url": f"https://github.com/{repository}/tree/{branch_name}",
+                    "created_timestamp": datetime.now().isoformat()
+                }
+            else:
+                return {
+                    "status": "error",
+                    "repository": repository,
+                    "branch_name": branch_name,
+                    "error": "Failed to create branch"
+                }
+            
     except Exception as e:
-        return {"status": "error", "error": f"Failed to update IaC via GitHub: {str(e)}"}
+        return {
+            "status": "error",
+            "error": f"Failed to create branch: {str(e)}",
+            "repository": repository,
+            "branch_name": branch_name
+        }
 
 
 @tool
-def list_infrastructure_repositories(
-    organization: str,
-    repository_type: str = "all",
-    include_archived: bool = False
-) -> Dict[str, Any]:
+def get_repository_info(repository: str) -> Dict[str, Any]:
     """
-    List GitHub repositories containing infrastructure code
+    Get basic repository information using MCP server
     
     Args:
-        organization: GitHub organization name
-        repository_type: Type of repositories (terraform, cloudformation, ansible, all)
-        include_archived: Whether to include archived repositories
+        repository: GitHub repository (owner/repo format)
     
     Returns:
-        Dict containing list of infrastructure repositories
+        Dict containing repository information
     """
     try:
-        # Simulate repository discovery (real implementation would use GitHub API)
-        repositories = _discover_infrastructure_repositories(organization, repository_type, include_archived)
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "MCP client not available"
+            }
         
-        repository_summary = {
-            "status": "success",
-            "organization": organization,
-            "repository_type": repository_type,
-            "scan_timestamp": datetime.now().isoformat(),
-            "total_repositories": len(repositories),
-            "repositories": repositories,
-            "statistics": {
-                "terraform_repos": len([r for r in repositories if "terraform" in r.get("technologies", [])]),
-                "cloudformation_repos": len([r for r in repositories if "cloudformation" in r.get("technologies", [])]),
-                "ansible_repos": len([r for r in repositories if "ansible" in r.get("technologies", [])]),
-                "active_repos": len([r for r in repositories if not r.get("archived", False)]),
-                "archived_repos": len([r for r in repositories if r.get("archived", False)])
-            },
-            "recommendations": _generate_repository_recommendations(repositories)
-        }
+        # Parse repository
+        if '/' not in repository:
+            return {"status": "error", "error": "Repository must be in 'owner/repo' format"}
         
-        return repository_summary
+        owner, repo = repository.split('/', 1)
         
+        # Get GitHub MCP client
+        github_client = mcp_client.get_github_client()
+        if not github_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available"
+            }
+        
+        with github_client:
+            # Get repository root to check basic info
+            repo_result = github_client.call_tool_sync(
+                tool_use_id="get-repo-info",
+                name="get_file_contents", 
+                arguments={
+                    "owner": owner,
+                    "repo": repo,
+                    "path": "/"
+                }
+            )
+            
+            # Get branches list
+            branches_result = github_client.call_tool_sync(
+                tool_use_id="list-branches",
+                name="list_branches", 
+                arguments={
+                    "owner": owner,
+                    "repo": repo
+                }
+            )
+            
+            if repo_result and repo_result.get("status") == "success":
+                branches = []
+                if branches_result and branches_result.get("status") == "success" and branches_result.get("content"):
+                    try:
+                        import json
+                        branches_data = json.loads(branches_result["content"][0]["text"])
+                        branches = branches_data if isinstance(branches_data, list) else []
+                    except:
+                        branches = []
+                
+                return {
+                    "status": "success",
+                    "repository": repository,
+                    "owner": owner,
+                    "repo": repo,
+                    "accessible": True,
+                    "branches": [branch.get("name", "") for branch in branches] if branches else [],
+                    "branch_count": len(branches),
+                    "scan_timestamp": datetime.now().isoformat(),
+                    "repository_url": f"https://github.com/{repository}"
+                }
+            else:
+                return {
+                    "status": "error",
+                    "repository": repository,
+                    "error": "Cannot access repository",
+                    "accessible": False
+                }
+            
     except Exception as e:
-        return {"status": "error", "error": f"Failed to list infrastructure repositories: {str(e)}"}
+        return {
+            "status": "error",
+            "error": f"Failed to get repository info: {str(e)}",
+            "repository": repository
+        }
 
 
 @tool
-def monitor_infrastructure_prs(
-    repository: str,
-    monitoring_scope: str = "open",
-    days_back: int = 30
-) -> Dict[str, Any]:
+def list_repository_branches(repository: str, page: int = 1, per_page: int = 30) -> Dict[str, Any]:
     """
-    Monitor infrastructure-related pull requests
+    List branches in a GitHub repository using MCP server
     
     Args:
-        repository: GitHub repository to monitor
-        monitoring_scope: Scope of monitoring (open, merged, all)
-        days_back: Number of days to look back
+        repository: GitHub repository (owner/repo format)  
+        page: Page number for pagination (default: 1)
+        per_page: Results per page (default: 30, max: 100)
     
     Returns:
-        Dict containing PR monitoring results
+        Dict containing list of branches
     """
     try:
-        cutoff_date = datetime.now() - timedelta(days=days_back)
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "MCP client not available"
+            }
         
-        # Simulate PR monitoring (real implementation would use GitHub API)
-        prs = _get_infrastructure_prs(repository, monitoring_scope, cutoff_date)
+        # Parse repository
+        if '/' not in repository:
+            return {"status": "error", "error": "Repository must be in 'owner/repo' format"}
         
-        monitoring_results = {
-            "status": "success",
-            "repository": repository,
-            "monitoring_scope": monitoring_scope,
-            "monitoring_period": f"{days_back} days",
-            "scan_timestamp": datetime.now().isoformat(),
-            "total_prs": len(prs),
-            "pull_requests": prs,
-            "pr_statistics": {
-                "open_prs": len([pr for pr in prs if pr.get("state") == "open"]),
-                "merged_prs": len([pr for pr in prs if pr.get("state") == "merged"]),
-                "closed_prs": len([pr for pr in prs if pr.get("state") == "closed"]),
-                "average_review_time": "2.5 days",
-                "automation_generated": len([pr for pr in prs if pr.get("automated", False)])
-            },
-            "risk_analysis": _analyze_pr_risks(prs),
-            "recommendations": _generate_pr_monitoring_recommendations(prs)
-        }
+        owner, repo = repository.split('/', 1)
         
-        return monitoring_results
+        # Get GitHub MCP client
+        github_client = mcp_client.get_github_client()
+        if not github_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available"
+            }
         
+        with github_client:
+            # List branches using MCP
+            result = github_client.call_tool_sync(
+                tool_use_id="list-repo-branches",
+                name="list_branches", 
+                arguments={
+                    "owner": owner,
+                    "repo": repo,
+                    "page": page,
+                    "perPage": min(per_page, 100)
+                }
+            )
+            
+            if result and result.get("status") == "success" and result.get("content"):
+                try:
+                    import json
+                    branches = json.loads(result["content"][0]["text"])
+                    if not isinstance(branches, list):
+                        branches = []
+                except:
+                    branches = []
+                
+                return {
+                    "status": "success",
+                    "repository": repository,
+                    "page": page,
+                    "per_page": per_page,
+                    "total_branches": len(branches),
+                    "branches": [
+                        {
+                            "name": branch.get("name", "") if isinstance(branch, dict) else str(branch),
+                            "protected": branch.get("protected", False) if isinstance(branch, dict) else False,
+                            "commit_sha": branch.get("commit", {}).get("sha", "unknown") if isinstance(branch, dict) else "unknown"
+                        }
+                        for branch in branches
+                    ],
+                    "branch_names": [branch.get("name", "") if isinstance(branch, dict) else str(branch) for branch in branches],
+                    "scan_timestamp": datetime.now().isoformat()
+                }
+            else:
+                return {
+                    "status": "error",
+                    "repository": repository,
+                    "error": "Failed to list branches"
+                }
+            
     except Exception as e:
-        return {"status": "error", "error": f"Failed to monitor infrastructure PRs: {str(e)}"}
-
-
-@tool
-def setup_infrastructure_automation(
-    repository: str,
-    automation_type: str,
-    configuration: Dict[str, Any]
-) -> Dict[str, Any]:
-    """
-    Setup GitHub Actions or other automation for infrastructure management
-    
-    Args:
-        repository: GitHub repository
-        automation_type: Type of automation (ci_cd, security_scanning, cost_monitoring)
-        configuration: Automation configuration
-    
-    Returns:
-        Dict containing automation setup results
-    """
-    try:
-        automation_result = {
-            "status": "success",
-            "repository": repository,
-            "automation_type": automation_type,
-            "setup_timestamp": datetime.now().isoformat(),
-            "configuration": configuration,
-            "workflow_files": [],
-            "automation_features": [],
-            "integration_points": []
+        return {
+            "status": "error",
+            "error": f"Failed to list repository branches: {str(e)}",
+            "repository": repository
         }
-        
-        if automation_type == "ci_cd":
-            automation_result.update(_setup_ci_cd_automation(repository, configuration))
-        elif automation_type == "security_scanning":
-            automation_result.update(_setup_security_scanning_automation(repository, configuration))
-        elif automation_type == "cost_monitoring":
-            automation_result.update(_setup_cost_monitoring_automation(repository, configuration))
-        else:
-            return {"status": "error", "error": f"Unsupported automation type: {automation_type}"}
-        
-        return automation_result
-        
-    except Exception as e:
-        return {"status": "error", "error": f"Failed to setup infrastructure automation: {str(e)}"}
-
-
-# Helper functions
-def _generate_optimization_pr_body(optimization_type: str, changes: Dict[str, Any]) -> str:
-    """Generate PR body for optimization changes"""
-    body = f"""# AWS {optimization_type.title()} Optimization
-
-This pull request implements automated {optimization_type} optimizations based on analysis of your AWS infrastructure.
-
-## Changes Summary
-
-"""
-    
-    if optimization_type.lower() == "cost":
-        body += f"""
-### Cost Optimization
-- **Estimated Monthly Savings**: ${changes.get('monthly_savings', 0):.2f}
-- **Estimated Annual Savings**: ${changes.get('annual_savings', 0):.2f}
-- **Resources Affected**: {len(changes.get('affected_resources', []))}
-
-### Specific Changes
-"""
-        for change in changes.get("specific_changes", []):
-            body += f"- {change}\n"
-    
-    elif optimization_type.lower() == "security":
-        body += f"""
-### Security Improvements
-- **Vulnerabilities Addressed**: {len(changes.get('security_fixes', []))}
-- **Risk Reduction**: {changes.get('risk_reduction', 'Medium')}
-
-### Security Fixes
-"""
-        for fix in changes.get("security_fixes", []):
-            body += f"- {fix}\n"
-    
-    body += """
-## Review Checklist
-- [ ] Changes have been tested in staging environment
-- [ ] Security implications have been reviewed
-- [ ] Cost impact has been analyzed
-- [ ] Rollback plan is documented
-
-## Deployment Notes
-This change requires careful review and testing before production deployment.
-
----
-*This pull request was prepared by AWS DevOps Agent with explicit user approval*
-"""
-    
-    return body
-
-
-def _generate_iac_pr_body(iac_tool: str, updates: Dict[str, Any]) -> str:
-    """Generate PR body for IaC updates"""
-    body = f"""# Infrastructure Update: {iac_tool.title()}
-
-This pull request updates infrastructure configuration based on best practices analysis.
-
-## Changes Overview
-
-"""
-    
-    if iac_tool.lower() == "terraform":
-        body += f"""
-### Terraform Changes
-- **Resources Modified**: {len(updates.get('resources', []))}
-- **Configuration Updates**: {len(updates.get('configurations', []))}
-- **Workspace**: {updates.get('workspace', 'default')}
-
-### Plan Output
-```
-{updates.get('plan_output', 'Run terraform plan to see changes')}
-```
-"""
-    elif iac_tool.lower() == "cloudformation":
-        body += f"""
-### CloudFormation Changes
-- **Stack**: {updates.get('stack_name', 'TBD')}
-- **Resources Modified**: {len(updates.get('resources', []))}
-- **Change Set**: Will be created upon approval
-
-### Template Validation
-- [ ] Template syntax validated
-- [ ] Template policies checked
-- [ ] Parameter validation completed
-"""
-    
-    body += """
-## Deployment Plan
-1. Review changes carefully
-2. Run validation/plan commands
-3. Test in staging environment
-4. Apply to production with approval
-
-## Safety Measures
-- [ ] Rollback plan documented
-- [ ] Change set reviewed (CloudFormation)
-- [ ] Terraform plan analyzed
-- [ ] State backup verified
-
----
-*Infrastructure changes require careful review and testing*
-"""
-    
-    return body
-
-
-def _discover_infrastructure_repositories(organization: str, repo_type: str, include_archived: bool) -> List[Dict[str, Any]]:
-    """Discover infrastructure repositories in organization"""
-    # Simulate repository discovery
-    base_repos = [
-        {
-            "name": "infrastructure-terraform",
-            "full_name": f"{organization}/infrastructure-terraform",
-            "description": "Main Terraform infrastructure repository",
-            "technologies": ["terraform", "aws"],
-            "archived": False,
-            "private": True,
-            "default_branch": "main",
-            "last_activity": "2024-01-15T10:30:00Z"
-        },
-        {
-            "name": "cloudformation-templates", 
-            "full_name": f"{organization}/cloudformation-templates",
-            "description": "CloudFormation templates for AWS resources",
-            "technologies": ["cloudformation", "aws"],
-            "archived": False,
-            "private": True,
-            "default_branch": "main",
-            "last_activity": "2024-01-14T15:45:00Z"
-        },
-        {
-            "name": "ansible-playbooks",
-            "full_name": f"{organization}/ansible-playbooks", 
-            "description": "Ansible configuration management",
-            "technologies": ["ansible", "configuration"],
-            "archived": True,
-            "private": True,
-            "default_branch": "main",
-            "last_activity": "2023-12-01T09:00:00Z"
-        }
-    ]
-    
-    # Filter based on parameters
-    filtered_repos = []
-    for repo in base_repos:
-        # Filter by archived status
-        if not include_archived and repo.get("archived", False):
-            continue
-        
-        # Filter by repository type
-        if repo_type != "all":
-            if repo_type.lower() not in repo.get("technologies", []):
-                continue
-        
-        filtered_repos.append(repo)
-    
-    return filtered_repos
-
-
-def _generate_repository_recommendations(repositories: List[Dict[str, Any]]) -> List[str]:
-    """Generate recommendations based on repository analysis"""
-    recommendations = []
-    
-    archived_repos = [r for r in repositories if r.get("archived", False)]
-    if archived_repos:
-        recommendations.append(f"Consider reviewing {len(archived_repos)} archived repositories for cleanup")
-    
-    terraform_repos = [r for r in repositories if "terraform" in r.get("technologies", [])]
-    if len(terraform_repos) > 1:
-        recommendations.append("Consider consolidating multiple Terraform repositories for better management")
-    
-    recommendations.extend([
-        "Implement consistent repository naming conventions",
-        "Add comprehensive README files to all infrastructure repositories",
-        "Setup branch protection rules for infrastructure repositories",
-        "Implement automated security scanning for all repositories"
-    ])
-    
-    return recommendations
-
-
-def _get_infrastructure_prs(repository: str, scope: str, cutoff_date: datetime) -> List[Dict[str, Any]]:
-    """Get infrastructure PRs from repository"""
-    # Simulate PR retrieval
-    sample_prs = [
-        {
-            "number": 42,
-            "title": "AWS Cost Optimization Updates",
-            "state": "open",
-            "created_at": "2024-01-14T10:00:00Z",
-            "updated_at": "2024-01-15T14:30:00Z",
-            "author": "aws-devops-agent",
-            "automated": True,
-            "labels": ["infrastructure", "cost-optimization"],
-            "files_changed": 3,
-            "risk_level": "low"
-        },
-        {
-            "number": 41,
-            "title": "Security Group Updates",
-            "state": "merged",
-            "created_at": "2024-01-12T15:00:00Z",
-            "updated_at": "2024-01-13T09:30:00Z",
-            "merged_at": "2024-01-13T09:30:00Z",
-            "author": "platform-team",
-            "automated": False,
-            "labels": ["infrastructure", "security"],
-            "files_changed": 2,
-            "risk_level": "medium"
-        }
-    ]
-    
-    # Filter by scope
-    if scope == "open":
-        return [pr for pr in sample_prs if pr.get("state") == "open"]
-    elif scope == "merged":
-        return [pr for pr in sample_prs if pr.get("state") == "merged"]
-    
-    return sample_prs
-
-
-def _analyze_pr_risks(prs: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Analyze risks in infrastructure PRs"""
-    high_risk_prs = len([pr for pr in prs if pr.get("risk_level") == "high"])
-    automated_prs = len([pr for pr in prs if pr.get("automated", False)])
-    
-    return {
-        "overall_risk_level": "Medium",
-        "high_risk_prs": high_risk_prs,
-        "automated_prs": automated_prs,
-        "risk_factors": [
-            "Multiple infrastructure changes in single PR",
-            "PRs without proper review requirements",
-            "Large number of files changed in single PR"
-        ],
-        "mitigation_recommendations": [
-            "Implement mandatory PR reviews for infrastructure changes",
-            "Add automated testing for infrastructure changes",
-            "Require approval from platform team for high-risk changes"
-        ]
-    }
-
-
-def _generate_pr_monitoring_recommendations(prs: List[Dict[str, Any]]) -> List[str]:
-    """Generate recommendations based on PR monitoring"""
-    recommendations = []
-    
-    open_prs = [pr for pr in prs if pr.get("state") == "open"]
-    if len(open_prs) > 5:
-        recommendations.append("Consider reducing the number of open PRs for better focus")
-    
-    automated_prs = [pr for pr in prs if pr.get("automated", False)]
-    if len(automated_prs) > 0:
-        recommendations.append(f"Monitor {len(automated_prs)} automated PRs for proper review")
-    
-    recommendations.extend([
-        "Implement PR templates for infrastructure changes",
-        "Setup automated testing for all infrastructure PRs",
-        "Add required status checks before merging"
-    ])
-    
-    return recommendations
-
-
-def _setup_ci_cd_automation(repository: str, configuration: Dict[str, Any]) -> Dict[str, Any]:
-    """Setup CI/CD automation"""
-    return {
-        "workflow_files": [
-            ".github/workflows/terraform-ci.yml",
-            ".github/workflows/terraform-cd.yml"
-        ],
-        "automation_features": [
-            "Terraform plan on PR",
-            "Terraform apply on merge to main",
-            "Automated testing",
-            "Security scanning"
-        ],
-        "integration_points": [
-            "AWS credentials via OIDC",
-            "Terraform Cloud/Enterprise",
-            "Slack notifications"
-        ]
-    }
-
-
-def _setup_security_scanning_automation(repository: str, configuration: Dict[str, Any]) -> Dict[str, Any]:
-    """Setup security scanning automation"""
-    return {
-        "workflow_files": [
-            ".github/workflows/security-scan.yml",
-            ".github/workflows/compliance-check.yml"
-        ],
-        "automation_features": [
-            "Terraform security scanning with Checkov",
-            "Secret scanning",
-            "Dependency vulnerability scanning",
-            "Infrastructure compliance checks"
-        ],
-        "integration_points": [
-            "Security findings in PR comments",
-            "SARIF uploads to GitHub Security tab",
-            "Integration with security monitoring tools"
-        ]
-    }
-
-
-def _setup_cost_monitoring_automation(repository: str, configuration: Dict[str, Any]) -> Dict[str, Any]:
-    """Setup cost monitoring automation"""
-    return {
-        "workflow_files": [
-            ".github/workflows/cost-estimation.yml",
-            ".github/workflows/cost-monitoring.yml"
-        ],
-        "automation_features": [
-            "Terraform cost estimation on PR",
-            "Cost impact analysis",
-            "Resource optimization suggestions",
-            "Monthly cost reports"
-        ],
-        "integration_points": [
-            "AWS Cost Explorer API",
-            "Cost optimization recommendations in PRs",
-            "Cost alerts and notifications"
-        ]
-    }
