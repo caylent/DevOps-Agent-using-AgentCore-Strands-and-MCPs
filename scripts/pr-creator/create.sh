@@ -148,11 +148,16 @@ Keep the response concise and professional, suitable for a pull request descript
 echo "🧠 Analizando cambios para generar descripción inteligente..."
 echo "Debug: Diff size: ${#DIFF_CONTENT} chars, Files: $(echo "$FILES_CHANGED" | wc -l) files"
 
-if AI_DESCRIPTION=$(generate_ai_description "$DIFF_CONTENT" "$COMMITS" "$FILES_CHANGED"); then
-  echo "✅ IA description generada exitosamente"
+if [[ "$USE_AI" == "true" ]]; then
+  if AI_DESCRIPTION=$(generate_ai_description "$DIFF_CONTENT" "$COMMITS" "$FILES_CHANGED"); then
+    echo "✅ IA description generada exitosamente"
+  else
+    echo "⚠️  IA falló, continuando con fallback"
+    AI_DESCRIPTION="<!-- AI description generation failed, using fallback -->"
+  fi
 else
-  echo "⚠️  IA falló, continuando con fallback"
-  AI_DESCRIPTION="<!-- AI description generation failed, using fallback -->"
+  echo "ℹ️  IA deshabilitada, usando fallbacks"
+  AI_DESCRIPTION="<!-- AI description generation disabled -->"
 fi
 
 # If multiple templates exist, you can choose with TEMPLATE_PATH=.github/PULL_REQUEST_TEMPLATE/feature.md
@@ -160,7 +165,7 @@ if [[ -f "$TEMPLATE_PATH" ]]; then
   cat "$TEMPLATE_PATH" > "$TMP_BODY"
   
   # Use AI description if available, otherwise use last commit body
-  if [[ "$AI_DESCRIPTION" != "<!-- AI description generation failed, using fallback -->" ]]; then
+  if [[ "$AI_DESCRIPTION" != "<!-- AI description generation failed, using fallback -->" && "$AI_DESCRIPTION" != "<!-- AI description generation disabled -->" ]]; then
     # Use a temp file to avoid sed escaping issues
     echo "$AI_DESCRIPTION" > /tmp/ai_desc.txt
     sed -i '/<!-- Describe what this PR does and why -->/r /tmp/ai_desc.txt' "$TMP_BODY"
@@ -179,7 +184,7 @@ if [[ -f "$TEMPLATE_PATH" ]]; then
   fi
 else
   # minimal fallback if template doesn't exist
-  if [[ "$AI_DESCRIPTION" != "<!-- AI description generation failed, using fallback -->" ]]; then
+  if [[ "$AI_DESCRIPTION" != "<!-- AI description generation failed, using fallback -->" && "$AI_DESCRIPTION" != "<!-- AI description generation disabled -->" ]]; then
     cat > "$TMP_BODY" <<EOF
 ## Summary
 
