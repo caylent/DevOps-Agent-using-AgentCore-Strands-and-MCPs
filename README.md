@@ -9,6 +9,9 @@
 - ✅ **Industry Standards**: PEP 8 compliant, version-agnostic filenames
 - ✅ **Comprehensive Testing**: Unit, integration, and fixture support
 - ✅ **Development Tools**: Black, isort, pytest, mypy configured
+- ✅ **Production AgentCore**: Docker containerization with health monitoring
+- ✅ **Strict Validation**: No defaults for production safety
+- ✅ **Enhanced Observability**: Health checks, metrics, and structured logging
 
 ## 🎯 What This Does
 
@@ -34,6 +37,11 @@ This agent transforms AWS DevOps operations into intelligent, automated processe
 - ✅ **Development Tooling** with black, isort, pytest, mypy
 - ✅ **Environment Management** with .env.example template
 - ✅ **Production Deployment** ready for Bedrock Agent Core
+- ✅ **Docker Containerization** with multi-stage builds and security hardening
+- ✅ **Health Monitoring** with /health and /metrics endpoints
+- ✅ **Strict Environment Validation** with no defaults for production safety
+- ✅ **Enhanced Logging** with structured logging and request tracking
+- ✅ **Comprehensive IAM Policies** for all AWS services
 
 ## 🏗️ Architecture
 
@@ -581,6 +589,49 @@ strands deploy bedrock-agentcore \
 ```
 "Analiza mi infraestructura Terraform, optimiza costos, valida compliance SOC2 y genera un PR"
 ```
+
+## 🚀 **AgentCore Deployment Commands**
+
+### **Environment Management**
+```bash
+# Create environment files
+make agentcore-env-dev      # Development environment
+make agentcore-env-prod     # Production environment
+make agentcore-env-staging  # Staging environment
+
+# Validate configuration
+make agentcore-validate     # Validate environment variables
+```
+
+### **Local Testing & Development**
+```bash
+# Test locally
+make agentcore-test-local   # Run agent locally for testing
+
+# Health monitoring
+make agentcore-health       # Check health status
+make agentcore-metrics      # Get metrics and stats
+```
+
+### **Production Deployment**
+```bash
+# Build and deploy
+make agentcore-build        # Build Docker image
+make agentcore-deploy       # Deploy to production (with HITL)
+make agentcore-deploy-verify # Human verification step
+
+# Monitoring
+make agentcore-status       # Check deployment status
+make agentcore-logs         # View logs
+make agentcore-monitor      # Monitor performance
+```
+
+### **Configuration Files**
+- `deployment/bedrock/app.py` - Main AgentCore application
+- `deployment/bedrock/Dockerfile` - Container configuration
+- `deployment/bedrock/.bedrock_agentcore.yaml` - AgentCore config
+- `deployment/bedrock/iam-policy.json` - IAM permissions
+- `deployment/bedrock/env.example` - Environment template
 
 ## 🎉 **Conclusión**
 

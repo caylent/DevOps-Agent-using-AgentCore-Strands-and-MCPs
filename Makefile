@@ -130,9 +130,9 @@ mcp-stop: ## Stop all running MCP servers
 mcp-test: ## Test MCP server connections
 	@echo "🧪 Testing MCP server connections..."
 	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		python tests/test_mcp_integration.py; \
+		python tests/integration/test_mcp_integration.py; \
 	else \
-		python3 tests/test_mcp_integration.py; \
+		python3 tests/integration/test_mcp_integration.py; \
 	fi
 
 # =============================================================================
@@ -282,29 +282,41 @@ agentcore-configure: ## Configure AgentCore for production deployment
 
 agentcore-validate: ## Validate environment configuration
 	@echo "🔍 Validating environment configuration..."
-	@python3 -c "
-	import sys
-	sys.path.insert(0, 'src')
-	from aws_devops_agent.config.env_config import load_env_file, get_env_config
-	try:
-		load_env_file()
-		config = get_env_config(strict_validation=True)
-		print('✅ Environment configuration is valid')
-		print(f'   AWS Region: {config.aws_region}')
-		print(f'   Model ID: {config.bedrock_model_id}')
-		print(f'   Server: {config.host}:{config.port}')
-		print(f'   Debug Mode: {config.debug_mode}')
-		warnings = config.validate_configuration()
-		if warnings:
-			print('\\n⚠️  Configuration warnings:')
-			for warning in warnings:
-				print(f'   - {warning}')
-		else:
-			print('\\n✅ No configuration warnings')
-	except Exception as e:
-		print(f'❌ Configuration validation failed: {e}')
-		exit(1)
-	"
+	@python3 scripts/validate_env.py
+
+agentcore-build: ## Build Docker image for AgentCore deployment
+	@echo "🐳 Building Docker image for AgentCore deployment..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		cp ../../requirements_production.txt . && \
+		cp -r ../../src . && \
+		docker build -t aws-devops-agent:latest . && \
+		rm -rf src requirements_production.txt && \
+		echo "✅ Docker image built successfully"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-health: ## Check AgentCore health status
+	@echo "🏥 Checking AgentCore health status..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		curl -f http://localhost:8080/health || echo "❌ Health check failed - agent may not be running"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+agentcore-metrics: ## Get AgentCore metrics
+	@echo "📊 Getting AgentCore metrics..."
+	@if [ -f .venv/bin/activate ]; then \
+		cd deployment/bedrock && \
+		curl -s http://localhost:8080/metrics | python3 -m json.tool || echo "❌ Metrics endpoint not available"; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
 
 agentcore-test-local: ## Test AgentCore deployment locally
 	@echo "🧪 Testing AgentCore deployment locally..."

@@ -8,6 +8,7 @@ This guide provides step-by-step instructions for deploying the AWS DevOps Agent
 
 ### System Requirements
 - Python 3.10+
+- Docker (for containerization)
 - AWS CLI configured with production credentials
 - Virtual environment support
 - `uv` package manager (for MCP servers)
@@ -15,15 +16,18 @@ This guide provides step-by-step instructions for deploying the AWS DevOps Agent
 ### Environment Variables
 The agent uses environment variables for configuration. See [Environment Variables Guide](ENVIRONMENT_VARIABLES.md) for complete details.
 
-**Required:**
+**Required (NO DEFAULTS for production safety):**
 - `AWS_REGION` - AWS region (e.g., us-east-1)
 - `BEDROCK_MODEL_ID` - Model ID (e.g., claude-3.5-sonnet)
+- `PORT` - Server port (e.g., 8080)
+- `HOST` - Server host (e.g., 0.0.0.0)
 
 **Optional:**
-- `PORT` - Server port (default: 8080)
-- `HOST` - Server host (default: 0.0.0.0)
 - `DEBUG_MODE` - Debug mode (default: false)
 - `LOG_LEVEL` - Log level (default: INFO)
+- `AWS_PROFILE` - AWS profile (default: default)
+- `MCP_TIMEOUT` - MCP server timeout (default: 30)
+- `MCP_MAX_WORKERS` - MCP max workers (default: 10)
 
 ### AWS Permissions Required
 ```json
@@ -62,33 +66,63 @@ source .venv/bin/activate
 
 ### 2. Configure Environment Variables (2 minutes)
 ```bash
-# Set production environment variables
+# Create production environment file
+make agentcore-env-prod
+
+# Or create development environment file
+make agentcore-env-dev
+
+# Or set system environment variables
 export AWS_REGION=us-east-1
 export BEDROCK_MODEL_ID=claude-3.5-sonnet
 export PORT=8080
 export HOST=0.0.0.0
 export DEBUG_MODE=false
-
-# Or create .env.production file
-cat > .env.production << EOF
-AWS_REGION=us-east-1
-BEDROCK_MODEL_ID=claude-3.5-sonnet
-PORT=8080
-HOST=0.0.0.0
-DEBUG_MODE=false
-EOF
 ```
 
-### 3. Test Locally (5 minutes)
+### 3. Validate Configuration (1 minute)
+```bash
+# Validate environment configuration
+make agentcore-validate
+```
+
+### 4. Test Locally (5 minutes)
 ```bash
 # Test deployment locally before production
 make agentcore-test-local
 ```
 
-### 4. Deploy to Production (10 minutes)
+### 5. Build Docker Image (3 minutes)
+```bash
+# Build containerized image
+make agentcore-build
+```
+
+### 6. Deploy to Production (10 minutes)
 ```bash
 # Deploy with human verification
 make agentcore-deploy
+```
+
+## New AgentCore Components
+
+### Production-Ready Features
+- **Dockerfile**: Multi-stage build with security hardening
+- **Bedrock Configuration**: `.bedrock_agentcore.yaml` for official AgentCore deployment
+- **Health Monitoring**: `/health` and `/metrics` endpoints for observability
+- **Enhanced Logging**: Structured logging with request tracking
+- **IAM Policy**: Comprehensive permissions for all AWS services
+- **Environment Validation**: Strict validation with no defaults for production safety
+
+### File Structure
+```
+deployment/bedrock/
+├── app.py                    # Main AgentCore application
+├── Dockerfile               # Container configuration
+├── .bedrock_agentcore.yaml  # AgentCore configuration
+├── env.example              # Environment template
+├── iam-policy.json          # IAM permissions
+└── .env                     # Environment variables (generated)
 ```
 
 ## Detailed Deployment Process

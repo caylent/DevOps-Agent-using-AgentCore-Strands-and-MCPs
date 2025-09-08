@@ -6,7 +6,10 @@ Production-ready agent for cost optimization, IaC analysis, and compliance valid
 
 import sys
 import os
+import logging
+import traceback
 from pathlib import Path
+from datetime import datetime
 
 # Add project paths for modern src/ layout
 project_root = Path(__file__).parent.parent.parent
@@ -72,6 +75,17 @@ except EnvironmentError as e:
 
 # Get model ID from centralized config
 model_id = env_config.get_model_id()
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, env_config.log_level.upper()),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/tmp/aws-devops-agent.log')
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Create the Strands agent
 agent = Agent(
@@ -242,28 +256,30 @@ app = BedrockAgentCoreApp(debug=env_config.debug_mode)
 @app.entrypoint
 def invoke(payload):
     """Process user input and return a response"""
-    print(f"📥 Received AWS DevOps payload: {payload}")
-
-    # Extract user message
-    user_message = payload.get("prompt", "")
-    if not user_message:
-        user_message = payload.get("inputText", "")
-    if not user_message:
-        user_message = payload.get("query", "Analyze AWS infrastructure and provide optimization recommendations")
-
-    print(f"💬 AWS DevOps query: {user_message}")
+    request_id = f"req_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    logger.info(f"[{request_id}] Received AWS DevOps payload: {payload}")
 
     try:
+        # Extract user message
+        user_message = payload.get("prompt", "")
+        if not user_message:
+            user_message = payload.get("inputText", "")
+        if not user_message:
+            user_message = payload.get("query", "Analyze AWS infrastructure and provide optimization recommendations")
+
+        logger.info(f"[{request_id}] Processing query: {user_message[:100]}...")
+
         # Process with Strands agent
         response = agent(user_message)
-        print(f"🤖 AWS DevOps Agent response: {response}")
+        logger.info(f"[{request_id}] Agent response generated successfully")
 
         # Return JSON serializable response
         if isinstance(response, str):
-            return {
+            result = {
                 "response": response,
                 "status": "success",
                 "agent": "AWS DevOps Agent",
+                "request_id": request_id,
                 "capabilities": [
                     "Real-time AWS cost analysis",
                     "IaC analysis (Terraform/CloudFormation)",
@@ -273,21 +289,58 @@ def invoke(payload):
                 ]
             }
         else:
-            return {
+            result = {
                 "response": str(response),
                 "status": "success",
                 "agent": "AWS DevOps Agent",
+                "request_id": request_id,
                 "data_source": "Real AWS APIs via MCP servers"
             }
 
+        logger.info(f"[{request_id}] Request completed successfully")
+        return result
+
     except Exception as e:
-        print(f"❌ AWS DevOps Agent Error: {e}")
+        error_msg = f"Error processing AWS DevOps request: {str(e)}"
+        logger.error(f"[{request_id}] {error_msg}")
+        logger.error(f"[{request_id}] Traceback: {traceback.format_exc()}")
+        
         return {
-            "response": f"Error processing AWS DevOps request: {str(e)}",
+            "response": error_msg,
             "status": "error",
             "error": str(e),
-            "suggestion": "Check AWS credentials and MCP server connectivity"
+            "request_id": request_id,
+            "suggestion": "Check AWS credentials and MCP server connectivity",
+            "timestamp": datetime.now().isoformat()
         }
+
+
+@app.route("/health")
+def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "healthy",
+        "agent": "AWS DevOps Agent",
+        "version": "1.0.0",
+        "timestamp": str(Path(__file__).stat().st_mtime),
+        "environment": {
+            "aws_region": env_config.aws_region,
+            "model_id": env_config.bedrock_model_id,
+            "debug_mode": env_config.debug_mode
+        }
+    }
+
+
+@app.route("/metrics")
+def metrics():
+    """Metrics endpoint for monitoring"""
+    return {
+        "agent_name": "AWS DevOps Agent",
+        "version": "1.0.0",
+        "uptime": "running",
+        "tools_loaded": len(agent.tools),
+        "environment": env_config.to_dict()
+    }
 
 
 if __name__ == "__main__":
