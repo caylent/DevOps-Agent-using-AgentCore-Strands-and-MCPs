@@ -54,6 +54,7 @@ PR_TITLE="Mi nueva característica increíble" ./scripts/pr-creator/create.sh
 # Template personalizado
 TEMPLATE_PATH=.github/PULL_REQUEST_TEMPLATE/feature.md ./scripts/pr-creator/create.sh
 
+
 # Deshabilitar IA
 USE_AI=false ./scripts/pr-creator/create.sh
 
