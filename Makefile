@@ -24,8 +24,8 @@ help: ## Show this help message
 	@echo ""
 	@echo "🔌 MCP SERVER MANAGEMENT"
 	@echo "========================="
-	@echo "\033[36mmcp-check\033[0m            Check if MCP servers are installed"
-	@echo "\033[36mmcp-install\033[0m          Install AWS MCP servers"
+	@echo "\033[36mmcp-check\033[0m            Check if MCP servers are installed (AWS + GitHub)"
+	@echo "\033[36mmcp-install\033[0m          Install AWS MCP servers + GitHub MCP server from source"
 	@echo "\033[36mmcp-run\033[0m              Run MCP servers directly (development)"
 	@echo "\033[36mmcp-stop\033[0m             Stop all running MCP servers"
 	@echo "\033[36mmcp-test\033[0m             Test MCP server connections"
@@ -145,21 +145,27 @@ install: setup ## Install dependencies (alias for setup)
 # MCP SERVER MANAGEMENT
 # =============================================================================
 
-mcp-check: ## Check if MCP servers are installed
-	@echo "🔌 Checking AWS MCP servers..."
+mcp-check: ## Check if MCP servers are installed (AWS + GitHub)
+	@echo "🔌 Checking MCP servers..."
 	@echo ""
 	@if command -v uv >/dev/null 2>&1; then \
 		echo "✅ uv is available"; \
 		echo ""; \
-		echo "Checking installed MCP servers:"; \
+		echo "Checking installed AWS MCP servers:"; \
 		uv tool list 2>/dev/null | grep -E "(cost-explorer|cloudwatch|aws-pricing|terraform|dynamodb)" || echo "❌ No AWS MCP servers found"; \
-		echo "Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)"; \
+		echo ""; \
+		echo "🔍 Checking GitHub MCP Server status:"; \
+		if [ -f github-mcp-server/github-mcp-server ]; then \
+			echo "✅ GitHub MCP Server binary available at github-mcp-server/github-mcp-server"; \
+		else \
+			echo "❌ GitHub MCP Server binary not found"; \
+		fi; \
 	else \
 		echo "❌ uv not available. Install with: curl -LsSf https://astral.sh/uv/install.sh \| sh"; \
 	fi
 
-mcp-install: ## Install AWS MCP servers
-	@echo "🔌 Installing AWS MCP servers..."
+mcp-install: ## Install AWS MCP servers and GitHub MCP server
+	@echo "🔌 Installing MCP servers (AWS + GitHub)..."
 	@if command -v uv >/dev/null 2>&1; then \
 		echo "Installing cost-explorer-mcp-server..."; \
 		uv tool install awslabs.cost-explorer-mcp-server@latest || echo "⚠️  Failed to install cost-explorer-mcp-server"; \
@@ -171,7 +177,25 @@ mcp-install: ## Install AWS MCP servers
 		uv tool install awslabs.terraform-mcp-server@latest || echo "⚠️  Failed to install terraform-mcp-server"; \
 		echo "Installing dynamodb-mcp-server..."; \
 		uv tool install awslabs.dynamodb-mcp-server@latest || echo "⚠️  Failed to install dynamodb-mcp-server"; \
-		echo "Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)"; \
+		echo ""; \
+		echo "🐙 Installing GitHub MCP Server from source..."; \
+		if [ -f src/aws_devops_agent/config/.env ]; then \
+			. src/aws_devops_agent/config/.env; \
+			if [ -n "$$GITHUB_PERSONAL_ACCESS_TOKEN" ] && command -v go >/dev/null 2>&1; then \
+				if [ ! -d "./github-mcp-server" ]; then \
+					echo "📥 Cloning GitHub MCP Server repository..."; \
+					git clone https://github.com/github/github-mcp-server.git; \
+				fi; \
+				echo "🔨 Building GitHub MCP Server..."; \
+				cd github-mcp-server/cmd/github-mcp-server && go build -o ../../github-mcp-server; \
+				chmod +x ../../github-mcp-server; \
+				echo "✅ GitHub MCP Server built successfully"; \
+			else \
+				echo "⚠️  GitHub MCP Server skipped - requires Go and GITHUB_PERSONAL_ACCESS_TOKEN in .env"; \
+			fi; \
+		else \
+			echo "⚠️  GitHub MCP Server skipped - configuration file not found"; \
+		fi; \
 		echo ""; \
 		echo "✅ MCP installation completed"; \
 		echo "💡 Run 'make mcp-check' to verify installation"; \
@@ -181,7 +205,7 @@ mcp-install: ## Install AWS MCP servers
 	fi
 
 mcp-run: ## Run MCP servers directly (development)
-	@echo "🚀 Running AWS MCP servers directly..."
+	@echo "🚀 Running MCP servers directly (AWS + GitHub)..."
 	@if command -v uvx >/dev/null 2>&1; then \
 		echo "Starting cost-explorer-mcp-server..."; \
 		uvx awslabs.cost-explorer-mcp-server@latest & \
@@ -193,7 +217,20 @@ mcp-run: ## Run MCP servers directly (development)
 		uvx awslabs.terraform-mcp-server@latest & \
 		echo "Starting dynamodb-mcp-server..."; \
 		uvx awslabs.dynamodb-mcp-server@latest & \
-		echo "Note: GitHub MCP server requires Docker: ghcr.io/github/github-mcp-server"; \
+		echo ""; \
+		echo "🐙 Starting GitHub MCP Server..."; \
+		if [ -f github-mcp-server/github-mcp-server ] && [ -f src/aws_devops_agent/config/.env ]; then \
+			. src/aws_devops_agent/config/.env; \
+			if [ -n "$$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then \
+				cd github-mcp-server && GITHUB_PERSONAL_ACCESS_TOKEN=$$GITHUB_PERSONAL_ACCESS_TOKEN ./github-mcp-server stdio & \
+				cd ..; \
+				echo "✅ GitHub MCP Server started"; \
+			else \
+				echo "⚠️  GitHub MCP Server not started - GITHUB_PERSONAL_ACCESS_TOKEN not found in .env"; \
+			fi; \
+		else \
+			echo "⚠️  GitHub MCP Server not started - binary or .env file not found"; \
+		fi; \
 		echo ""; \
 		echo "✅ MCP servers started in background"; \
 		echo "💡 Use 'make mcp-stop' to stop all servers"; \
@@ -209,7 +246,7 @@ mcp-stop: ## Stop all running MCP servers
 	@pkill -f "aws-pricing-mcp-server" || true
 	@pkill -f "terraform-mcp-server" || true
 	@pkill -f "dynamodb-mcp-server" || true
-	@echo "Note: GitHub MCP server runs in Docker, stop manually if needed"
+	@pkill -f "github-mcp-server" || true
 	@echo "✅ MCP servers stopped"
 
 mcp-test: ## Test MCP server connections
@@ -222,52 +259,6 @@ mcp-test: ## Test MCP server connections
 		exit 1; \
 	fi
 
-install-github-source: ## Install GitHub MCP server from source (requires Go)
-	@echo "🐙 Installing GitHub MCP Server from source..."
-	@if [ -f src/aws_devops_agent/config/.env ]; then \
-		echo "📋 Loading configuration from src/aws_devops_agent/config/.env..."; \
-		. src/aws_devops_agent/config/.env; \
-		if [ -z "$$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then \
-			echo "❌ GitHub token required. Set via:"; \
-			echo "   1. Copy src/aws_devops_agent/config/.env.example to .env and fill token"; \
-			echo "   2. Or export: export GITHUB_PERSONAL_ACCESS_TOKEN=your_token"; \
-			exit 1; \
-		fi; \
-		if ! command -v go >/dev/null 2>&1; then \
-			echo "❌ Go not installed. Install with: sudo apt install golang-go"; \
-			exit 1; \
-		fi; \
-		if [ ! -d "./github-mcp-server" ]; then \
-			echo "📥 Cloning GitHub MCP Server repository..."; \
-			git clone https://github.com/github/github-mcp-server.git; \
-		else \
-			echo "📁 Using existing repository..."; \
-		fi; \
-		echo "🔨 Building GitHub MCP Server..."; \
-		cd github-mcp-server/cmd/github-mcp-server && go build -o ../../github-mcp-server; \
-		chmod +x ../../github-mcp-server; \
-		echo "✅ GitHub MCP Server built successfully"; \
-		echo "💡 Run with: cd github-mcp-server && GITHUB_PERSONAL_ACCESS_TOKEN=$$GITHUB_PERSONAL_ACCESS_TOKEN ./github-mcp-server stdio"; \
-	else \
-		echo "❌ Configuration file not found. Create src/aws_devops_agent/config/.env with GITHUB_PERSONAL_ACCESS_TOKEN"; \
-		exit 1; \
-	fi
-
-github-status: ## Check GitHub MCP server status
-	@echo "🔍 Checking GitHub MCP Server status..."
-	@if docker ps | grep github-mcp >/dev/null 2>&1; then \
-		echo "✅ GitHub MCP Server (Docker) is running"; \
-		echo "📊 Container details:"; \
-		docker ps --filter name=github-mcp --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"; \
-	else \
-		echo "❌ GitHub MCP Server (Docker) not running"; \
-	fi
-	@if [ -f github-mcp-server/github-mcp-server ]; then \
-		echo "✅ GitHub MCP Server binary available at github-mcp-server/github-mcp-server"; \
-	else \
-		echo "❌ GitHub MCP Server binary not found"; \
-	fi
-	
 
 # =============================================================================
 # DEVELOPMENT & TESTING
