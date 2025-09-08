@@ -42,6 +42,15 @@ __all__ = [
     "get_organization_costs",
     "analyze_account_costs",
     "generate_multi_account_report",
+    "get_cost_forecast_mcp",
+    "compare_cost_periods_mcp",
+    "scan_live_aws_resources",
+    "analyze_unused_resources",
+    "get_resource_utilization_metrics",
+    "discover_cross_account_resources",
+    "list_cross_account_resources",
+    "execute_cross_account_operation",
+    "monitor_cross_account_compliance",
     
     # IaC tools
     "analyze_terraform_configuration",
@@ -67,6 +76,13 @@ __all__ = [
     "check_compliance_standards",
     "generate_compliance_report",
     "scan_security_vulnerabilities",
+    "analyze_security_hub_findings",
+    "get_security_insights",
+    "analyze_security_posture",
+    "analyze_config_compliance",
+    "get_compliance_details",
+    "check_resource_compliance",
+    "analyze_inspector_findings",
     
     # GitHub tools
     "create_optimization_pull_request",

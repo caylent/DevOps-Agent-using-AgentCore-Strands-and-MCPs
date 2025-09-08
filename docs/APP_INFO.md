@@ -91,7 +91,6 @@ strands-bedrock-mcp-devops-agent/
 ├── deployment/bedrock/             # 🚀 Production deployment
 │   └── app.py                      # Bedrock Agent Core app
 ├── scripts/                       # 🔧 Setup and utility scripts
-│   ├── setup_mcp_servers.py
 │   └── setup.sh
 ├── tests/                         # 🧪 Organized testing
 │   ├── unit/                      # Unit tests

@@ -82,7 +82,7 @@ def test_import_structure():
     
     # Test Cost tools import
     try:
-        from aws_devops_agent.tools.aws_cost.optimization import get_actual_aws_costs, get_cost_forecast_mcp
+        from aws_devops_agent.tools.aws_cost.optimization import get_cost_forecast_mcp, compare_cost_periods_mcp
         print("✅ Cost tools imported successfully")
     except ImportError as e:
         print(f"❌ Failed to import Cost tools: {e}")

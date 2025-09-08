@@ -22,7 +22,9 @@ from .optimization import (
     analyze_usage_based_optimization,
     get_underutilized_resources,
     calculate_wasted_spend,
-    generate_cost_optimization_report
+    generate_cost_optimization_report,
+    get_cost_forecast_mcp,
+    compare_cost_periods_mcp
 )
 
 from .resources import (
@@ -38,7 +40,10 @@ from .resources import (
 from .multi_account import (
     get_organization_costs,
     analyze_account_costs,
-    generate_multi_account_report
+    generate_multi_account_report,
+    list_cross_account_resources,
+    execute_cross_account_operation,
+    monitor_cross_account_compliance
 )
 
 __all__ = [
@@ -61,5 +66,10 @@ __all__ = [
     'calculate_resource_utilization',
     'get_organization_costs',
     'analyze_account_costs',
-    'generate_multi_account_report'
+    'generate_multi_account_report',
+    'get_cost_forecast_mcp',
+    'compare_cost_periods_mcp',
+    'list_cross_account_resources',
+    'execute_cross_account_operation',
+    'monitor_cross_account_compliance'
 ]

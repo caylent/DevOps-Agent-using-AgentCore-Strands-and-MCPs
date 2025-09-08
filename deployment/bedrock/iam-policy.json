@@ -1,0 +1,285 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockAgentCoreAccess",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "bedrock:GetFoundationModel",
+        "bedrock:ListFoundationModels",
+        "bedrock:GetModelInvocationLoggingConfiguration",
+        "bedrock:PutModelInvocationLoggingConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CostExplorerAccess",
+      "Effect": "Allow",
+      "Action": [
+        "ce:GetCostAndUsage",
+        "ce:GetDimensionValues",
+        "ce:GetReservationCoverage",
+        "ce:GetReservationPurchaseRecommendation",
+        "ce:GetReservationUtilization",
+        "ce:GetUsageReport",
+        "ce:GetCostCategories",
+        "ce:GetSavingsPlansUtilization",
+        "ce:GetSavingsPlansUtilizationDetails",
+        "ce:GetSavingsPlansCoverage",
+        "ce:GetSavingsPlansUtilizationRecommendations",
+        "ce:GetRightsizingRecommendation",
+        "ce:GetUsageReport",
+        "ce:GetCostAndUsageWithResources",
+        "ce:GetForecast",
+        "ce:GetAnomalies",
+        "ce:GetAnomalySubscriptions",
+        "ce:GetAnomalyMonitors"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchAccess",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:GetMetricData",
+        "cloudwatch:GetMetricStatistics",
+        "cloudwatch:ListMetrics",
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:GetAlarmHistory",
+        "cloudwatch:DescribeAlarmHistory",
+        "cloudwatch:DescribeAlarmsForMetric",
+        "cloudwatch:GetMetricWidgetImage",
+        "cloudwatch:PutMetricData"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "PricingAccess",
+      "Effect": "Allow",
+      "Action": [
+        "pricing:GetProducts",
+        "pricing:GetAttributeValues",
+        "pricing:DescribeServices"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "EC2Access",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeVolumes",
+        "ec2:DescribeSnapshots",
+        "ec2:DescribeImages",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeReservedInstances",
+        "ec2:DescribeReservedInstancesOfferings",
+        "ec2:DescribeSpotInstanceRequests",
+        "ec2:DescribeSpotPriceHistory",
+        "ec2:DescribeRegions",
+        "ec2:DescribeAvailabilityZones"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SecurityHubAccess",
+      "Effect": "Allow",
+      "Action": [
+        "securityhub:GetFindings",
+        "securityhub:GetInsights",
+        "securityhub:ListFindings",
+        "securityhub:ListInsights",
+        "securityhub:GetEnabledStandards",
+        "securityhub:GetStandardsControl",
+        "securityhub:GetStandardsControls",
+        "securityhub:GetSecurityScore",
+        "securityhub:GetSecurityScoreHistory"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ConfigAccess",
+      "Effect": "Allow",
+      "Action": [
+        "config:GetComplianceDetailsByConfigRule",
+        "config:GetComplianceDetailsByResource",
+        "config:GetComplianceSummaryByConfigRule",
+        "config:GetComplianceSummaryByResourceType",
+        "config:GetComplianceSummaryByResourceType",
+        "config:DescribeConfigRules",
+        "config:DescribeConfigurationRecorders",
+        "config:DescribeConfigurationRecorderStatus",
+        "config:DescribeDeliveryChannels",
+        "config:DescribeDeliveryChannelStatus",
+        "config:GetResourceConfigHistory",
+        "config:ListDiscoveredResources"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "InspectorAccess",
+      "Effect": "Allow",
+      "Action": [
+        "inspector2:ListFindings",
+        "inspector2:GetFindings",
+        "inspector2:ListScans",
+        "inspector2:GetScan",
+        "inspector2:ListCoverage",
+        "inspector2:GetCoverage",
+        "inspector2:ListFilters",
+        "inspector2:GetFilter",
+        "inspector2:ListAccountPermissions",
+        "inspector2:GetConfiguration"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "S3Access",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketAcl",
+        "s3:GetBucketCORS",
+        "s3:GetBucketLifecycleConfiguration",
+        "s3:GetBucketLogging",
+        "s3:GetBucketNotification",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketRequestPayment",
+        "s3:GetBucketTagging",
+        "s3:GetBucketWebsite",
+        "s3:GetObjectAcl",
+        "s3:GetObjectVersion",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudFormationAccess",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:DescribeStackResources",
+        "cloudformation:DescribeStackSet",
+        "cloudformation:DescribeStackSetOperation",
+        "cloudformation:ListStacks",
+        "cloudformation:ListStackResources",
+        "cloudformation:ListStackSets",
+        "cloudformation:GetTemplate",
+        "cloudformation:ValidateTemplate",
+        "cloudformation:EstimateTemplateCost",
+        "cloudformation:GetStackPolicy",
+        "cloudformation:GetTemplateSummary"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "LogsAccess",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents",
+        "logs:StartQuery",
+        "logs:StopQuery",
+        "logs:GetQueryResults"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IAMAccess",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "iam:ListPolicies",
+        "iam:ListPolicyVersions",
+        "iam:GetUser",
+        "iam:GetUserPolicy",
+        "iam:ListUserPolicies",
+        "iam:ListAttachedUserPolicies",
+        "iam:GetGroup",
+        "iam:GetGroupPolicy",
+        "iam:ListGroupPolicies",
+        "iam:ListAttachedGroupPolicies",
+        "iam:ListGroupsForUser",
+        "iam:ListUsers",
+        "iam:ListGroups",
+        "iam:ListRoles",
+        "iam:GetAccountSummary",
+        "iam:GetAccountPasswordPolicy",
+        "iam:GetLoginProfile",
+        "iam:ListAccessKeys",
+        "iam:ListSigningCertificates",
+        "iam:ListSSHPublicKeys",
+        "iam:ListServiceSpecificCredentials",
+        "iam:ListMFADevices",
+        "iam:GetCredentialReport",
+        "iam:GenerateCredentialReport"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "OrganizationsAccess",
+      "Effect": "Allow",
+      "Action": [
+        "organizations:DescribeOrganization",
+        "organizations:DescribeAccount",
+        "organizations:ListAccounts",
+        "organizations:ListAccountsForParent",
+        "organizations:ListOrganizationalUnitsForParent",
+        "organizations:ListRoots",
+        "organizations:ListParents",
+        "organizations:ListChildren",
+        "organizations:DescribeOrganizationalUnit",
+        "organizations:DescribePolicy",
+        "organizations:ListPolicies",
+        "organizations:ListPoliciesForTarget",
+        "organizations:ListTargetsForPolicy",
+        "organizations:ListAWSServiceAccessForOrganization",
+        "organizations:ListDelegatedAdministrators",
+        "organizations:ListDelegatedServicesForAccount"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SupportAccess",
+      "Effect": "Allow",
+      "Action": [
+        "support:DescribeTrustedAdvisorChecks",
+        "support:DescribeTrustedAdvisorCheckResult",
+        "support:DescribeTrustedAdvisorCheckSummaries",
+        "support:DescribeCases",
+        "support:DescribeServices",
+        "support:DescribeSeverityLevels",
+        "support:DescribeCommunication",
+        "support:DescribeAttachment",
+        "support:DescribeCreateCaseOptions",
+        "support:DescribeSupportedLanguages",
+        "support:DescribeIssueTypes"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

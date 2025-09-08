@@ -81,11 +81,17 @@ make mcp-stop
 uv tool install awslabs.cost-explorer-mcp-server@latest
 uv tool install awslabs.cloudwatch-mcp-server@latest
 uv tool install awslabs.aws-pricing-mcp-server@latest
+uv tool install awslabs.terraform-mcp-server@latest
+uv tool install awslabs.dynamodb-mcp-server@latest
+# Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)
 
 # Or run directly
 uvx awslabs.cost-explorer-mcp-server@latest
 uvx awslabs.cloudwatch-mcp-server@latest
 uvx awslabs.aws-pricing-mcp-server@latest
+uvx awslabs.terraform-mcp-server@latest
+uvx awslabs.dynamodb-mcp-server@latest
+# Note: GitHub MCP server requires Docker: docker run ghcr.io/github/github-mcp-server
 ```
 
 #### **3. Configure AWS Credentials**

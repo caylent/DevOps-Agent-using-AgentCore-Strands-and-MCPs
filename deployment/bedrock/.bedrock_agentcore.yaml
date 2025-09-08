@@ -1,0 +1,42 @@
+# AWS DevOps Agent - Bedrock AgentCore Configuration
+name: aws-devops-agent
+description: "Production AWS DevOps agent for cost optimization, IaC analysis, compliance validation, and automated infrastructure improvements"
+version: "1.0.0"
+
+# Runtime configuration
+runtime:
+  entrypoint: app.py
+  timeout: 300  # 5 minutes
+  memory: 2048  # 2GB
+  cpu: 1024     # 1 vCPU
+
+# Environment configuration
+environment:
+  region: us-east-1
+  stage: production
+  
+# Resource limits
+resources:
+  max_concurrent_requests: 10
+  max_request_duration: 300
+  
+# Security configuration
+security:
+  iam_role: aws-devops-agent-role
+  vpc_config:
+    security_group_ids: []
+    subnet_ids: []
+  
+# Monitoring and logging
+monitoring:
+  log_level: INFO
+  enable_cloudwatch: true
+  enable_xray: true
+  
+# Health check configuration
+health_check:
+  path: /health
+  interval: 30
+  timeout: 10
+  healthy_threshold: 2
+  unhealthy_threshold: 3

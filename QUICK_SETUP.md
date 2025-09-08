@@ -33,8 +33,22 @@ make mcp-stop
 ```
 
 ## 3️⃣ Configure Environment
+
+**For AgentCore Deployment (Production):**
 ```bash
-# Copy environment template
+# Create production environment
+make agentcore-env-prod
+
+# Validate configuration
+make agentcore-validate
+```
+
+**For Development:**
+```bash
+# Create development environment
+make agentcore-env-dev
+
+# Or copy environment template
 cp .env.example .env
 
 # Configure AWS credentials (choose one method):
@@ -157,6 +171,42 @@ python main.py --query "Analyze AWS costs for my infrastructure"
 # Production mode
 aws-devops-agent --mode interactive
 ```
+
+## 🚀 AgentCore Deployment (Production)
+
+### **Quick AgentCore Setup**
+```bash
+# 1. Validate environment
+make agentcore-validate
+
+# 2. Test locally
+make agentcore-test-local
+
+# 3. Build Docker image
+make agentcore-build
+
+# 4. Deploy to production (with human verification)
+make agentcore-deploy
+```
+
+### **AgentCore Monitoring**
+```bash
+# Health checks
+make agentcore-health       # Check health status
+make agentcore-metrics      # Get metrics
+
+# Monitoring
+make agentcore-status       # Deployment status
+make agentcore-logs         # View logs
+make agentcore-monitor      # Performance monitoring
+```
+
+### **AgentCore Configuration Files**
+- `deployment/bedrock/app.py` - Main application
+- `deployment/bedrock/Dockerfile` - Container config
+- `deployment/bedrock/.bedrock_agentcore.yaml` - AgentCore config
+- `deployment/bedrock/iam-policy.json` - IAM permissions
+- `deployment/bedrock/env.example` - Environment template
 
 ## 🔧 IAM Permissions Needed:
 ```json
