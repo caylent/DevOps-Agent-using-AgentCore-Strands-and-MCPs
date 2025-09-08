@@ -114,17 +114,32 @@ class DevOpsMCPClient:
         """Get or create GitHub MCP client using Strands pattern"""
         if "github" not in self.clients:
             try:
-                github_token = os.getenv("GITHUB_TOKEN")
+                # Load GitHub token from config directory
+                github_token = os.getenv("GITHUB_PERSONAL_ACCESS_TOKEN")
                 if not github_token:
-                    print("⚠️  GITHUB_TOKEN not found in environment")
+                    # Try to read from config file
+                    try:
+                        config_path = "src/aws_devops_agent/config/.env"
+                        if os.path.exists(config_path):
+                            with open(config_path, 'r') as f:
+                                for line in f:
+                                    if line.startswith("GITHUB_PERSONAL_ACCESS_TOKEN="):
+                                        github_token = line.split("=", 1)[1].strip()
+                                        break
+                    except Exception:
+                        pass
+                
+                if not github_token:
+                    print("⚠️  GITHUB_PERSONAL_ACCESS_TOKEN not found in environment or config")
                     return None
                 
+                # Use our compiled GitHub MCP server
                 mcp_client = MCPClient(lambda: stdio_client(
                     StdioServerParameters(
-                        command="uvx",
-                        args=["github.github-mcp-server@latest"],
+                        command="./github-mcp-server/github-mcp-server",
+                        args=["stdio"],
                         env={
-                            "GITHUB_TOKEN": github_token,
+                            "GITHUB_PERSONAL_ACCESS_TOKEN": github_token,
                             "FASTMCP_LOG_LEVEL": "ERROR"
                         }
                     )
