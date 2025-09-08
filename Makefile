@@ -274,17 +274,6 @@ example-security: ## Run AWS security analysis example
 	@echo "🛡️ Running AWS security analysis example..."
 	@python docs/demos/demo_aws_security_analysis.py
 
-example-security-hub: ## Run Security Hub focused demo
-	@echo "🔍 Running Security Hub focused demo..."
-	@python docs/demos/demo_security_hub_simple.py
-
-example-trusted-advisor: ## Run Trusted Advisor focused demo
-	@echo "💡 Running Trusted Advisor focused demo..."
-	@python docs/demos/demo_trusted_advisor_simple.py
-
-example-cdk-pricing: ## Run CDK pricing focused demo
-	@echo "💰 Running CDK pricing focused demo..."
-	@python docs/demos/demo_cdk_pricing_simple.py
 
 example-data-sources: ## Run data sources focused demo
 	@echo "📊 Running data sources focused demo..."
