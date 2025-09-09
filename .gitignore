@@ -144,6 +144,12 @@ ENV/
 env.bak/
 venv.bak/
 
+# GitHub Personal Access Tokens and Secrets
+config/.env.github
+config/.env.*
+*.token
+.secrets/
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -200,8 +206,25 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+.cursorrules
 
 # Marimo
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+.venv/
+
+# Generated Reports
+# Ignore all generated report files but keep folder structure
+reports/**/*.md
+reports/**/*.json
+reports/**/*.csv
+reports/**/*.xlsx
+reports/**/*.pdf
+# Keep .gitkeep files to maintain folder structure
+!reports/**/.gitkeep
+
+# Session Storage
+# Local session data - contains conversation history and private data
+.sessions/
+*.session

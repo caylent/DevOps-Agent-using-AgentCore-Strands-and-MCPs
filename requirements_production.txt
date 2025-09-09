@@ -1,0 +1,17 @@
+# Production Dependencies - AWS DevOps Agent
+# Clean requirements for production use only
+
+# MCP Protocol support
+mcp
+
+# Strands SDK (requires access)
+strands-agents
+bedrock-agentcore
+bedrock-agentcore-starter-toolkit
+
+# AWS SDK
+boto3
+
+# Data processing
+pandas
+openpyxl
