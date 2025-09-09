@@ -7,14 +7,15 @@ from strands.tools.mcp import MCPClient
 import os
 
 def load_github_config():
-    """Load GitHub configuration from .env.github file"""
+    """Load GitHub configuration from .env file"""
     config = {}
     try:
-        with open('config/.env.github', 'r') as f:
+        with open('config/.env', 'r') as f:
             for line in f:
                 if line.strip() and not line.startswith('#'):
-                    key, value = line.strip().split('=', 1)
-                    config[key] = value
+                    if '=' in line:
+                        key, value = line.strip().split('=', 1)
+                        config[key] = value
         return config
     except Exception as e:
         print(f"❌ Error loading GitHub config: {e}")
@@ -30,7 +31,8 @@ default_repo = github_config.get('GITHUB_DEFAULT_REPO', '')
 
 if not github_token:
     print("⚠️  GitHub token not found - skipping GitHub MCP tests")
-    print("   To enable GitHub tests, create config/.env.github with GITHUB_PERSONAL_ACCESS_TOKEN")
+    print("   To enable GitHub tests, add GITHUB_PERSONAL_ACCESS_TOKEN to .env file")
+    print("✅ GitHub MCP tests skipped (no token configured)")
     # Skip GitHub-dependent tests instead of exiting
     import pytest
     pytest.skip("GitHub configuration not available", allow_module_level=True)

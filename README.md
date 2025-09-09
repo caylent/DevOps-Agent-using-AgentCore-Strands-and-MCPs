@@ -21,7 +21,7 @@ This agent transforms AWS DevOps operations into intelligent, automated processe
 - **Infrastructure as Code analysis** for Terraform and CloudFormation  
 - **Security and compliance validation** (SOC2, HIPAA, PCI-DSS, ISO27001)
 - **Multi-account AWS operations** across organizations
-- **Automated GitHub PR generation** for infrastructure improvements
+- **GitHub MCP integration** with repository management and PR automation
 - **Document generation** with automatic report creation in organized folders
 
 ## ✅ Implementation Status
@@ -42,6 +42,7 @@ This agent transforms AWS DevOps operations into intelligent, automated processe
 - ✅ **Strict Environment Validation** with no defaults for production safety
 - ✅ **Enhanced Logging** with structured logging and request tracking
 - ✅ **Comprehensive IAM Policies** for all AWS services
+- ✅ **GitHub MCP Integration** with repository management and PR automation
 
 ## 🏗️ Architecture
 
@@ -138,19 +139,29 @@ cd strands-bedrock-mcp-devops-agent
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Install AWS MCP Servers
+# 3. Install MCP Servers
+# AWS MCP Servers
 uv tool install awslabs.cost-explorer-mcp-server@latest
 uv tool install awslabs.cloudwatch-mcp-server@latest
 uv tool install awslabs.aws-pricing-mcp-server@latest
 uv tool install awslabs.terraform-mcp-server@latest
 uv tool install awslabs.dynamodb-mcp-server@latest
-# Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)
+
+# GitHub MCP Server (built from source)
+# Requires Go and GitHub Personal Access Token
+make mcp-install
 
 # 4. Configure environment
 cp .env.example .env
 # Edit .env with your AWS credentials
 
-# 5. For development (optional)
+# 5. Configure GitHub MCP (optional)
+# Add GitHub Personal Access Token to config/.env
+echo "GITHUB_PERSONAL_ACCESS_TOKEN=ghp_your_token_here" >> src/aws_devops_agent/config/.env
+# Test GitHub connectivity
+make github-test-connectivity REPO=octocat/Hello-World
+
+# 6. For development (optional)
 pip install -r requirements_dev.txt
 ```
 

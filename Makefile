@@ -35,7 +35,9 @@ help: ## Show this help message
 	@echo "\033[36mtest\033[0m                 Run all tests (excludes integration tests)"
 	@echo "\033[36mtest-terraform\033[0m       Run Terraform tests"
 	@echo "\033[36mtest-integration\033[0m     Run integration tests (requires GitHub config)"
+	@echo "\033[36mtest-github\033[0m          Run GitHub integration tests (requires GitHub config)"
 	@echo "\033[36mtest-complete-workflow\033[0m Run complete workflow test (requires GitHub config)"
+	@echo "\033[36mgithub-test-connectivity\033[0m Test GitHub repository connectivity (usage: make github-test-connectivity REPO=owner/repo)"
 	@echo "\033[36mformat\033[0m               Format code"
 	@echo ""
 	@echo "🚀 AGENTCORE DEPLOYMENT"
@@ -54,7 +56,7 @@ help: ## Show this help message
 	@echo ""
 	@echo "📚 EXAMPLES & DEMOS"
 	@echo "===================="
-	@echo "\033[36mexample\033[0m              Run example (usage: make example TYPE=cost|iac|compliance|cdk|terraform|security|data-sources|report)"
+	@echo "\033[36mexample\033[0m              Run example (usage: make example TYPE=cost|iac|compliance|cdk|terraform|security|data-sources|report|github)"
 	@echo ""
 	@echo "💡 Quick Start: make setup && make run"
 	@echo "🔧 AgentCore: make agentcore-configure && make agentcore-deploy"
@@ -69,30 +71,34 @@ help: ## Show this help message
 
 run: ## Run the agent (interactive mode) - MAIN COMMAND
 	@echo "🚀 Starting AWS DevOps Agent..."
-	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		echo "✅ Using virtual environment: $$VIRTUAL_ENV"; \
-		python main.py --mode interactive; \
+	@if [ -f .venv/bin/activate ]; then \
+		source .venv/bin/activate && \
+		echo "✅ Using virtual environment: .venv"; \
+		PYTHONPATH=src python main.py --mode interactive; \
 	else \
-		echo "⚠️  No virtual environment detected. Using system Python..."; \
-		python3 main.py --mode interactive; \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
 	fi
 
 run-no-account-selection: ## Run the agent without interactive account selection
 	@echo "🚀 Starting AWS DevOps Agent (no account selection)..."
-	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		echo "✅ Using virtual environment: $$VIRTUAL_ENV"; \
-		python main.py --mode interactive --no-account-selection; \
+	@if [ -f .venv/bin/activate ]; then \
+		source .venv/bin/activate && \
+		echo "✅ Using virtual environment: .venv"; \
+		PYTHONPATH=src python main.py --mode interactive --no-account-selection; \
 	else \
-		echo "⚠️  No virtual environment detected. Using system Python..."; \
-		python3 main.py --mode interactive --no-account-selection; \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
 	fi
 
 dev: ## Run in demo mode
 	@echo "🎭 Starting AWS DevOps Agent in demo mode..."
-	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		python main.py --mode demo; \
+	@if [ -f .venv/bin/activate ]; then \
+		source .venv/bin/activate && \
+		PYTHONPATH=src python main.py --mode demo; \
 	else \
-		python3 main.py --mode demo; \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
 	fi
 
 query: ## Run a single query (usage: make query QUERY="your query")
@@ -101,10 +107,12 @@ query: ## Run a single query (usage: make query QUERY="your query")
 		exit 1; \
 	fi
 	@echo "🔍 Running query: $(QUERY)"
-	@if [ -n "$$VIRTUAL_ENV" ]; then \
-		python main.py --query "$(QUERY)"; \
+	@if [ -f .venv/bin/activate ]; then \
+		source .venv/bin/activate && \
+		PYTHONPATH=src python main.py --query "$(QUERY)"; \
 	else \
-		python3 main.py --query "$(QUERY)"; \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
 	fi
 
 # =============================================================================
@@ -120,21 +128,8 @@ setup: ## Complete setup: create venv, install deps, install MCP servers, instal
 	.venv/bin/pip install -r requirements.txt
 	.venv/bin/pip install -r requirements_dev.txt
 	.venv/bin/pip install bedrock-agentcore
-	@echo "3️⃣ Installing AWS MCP servers..."
-	@if command -v uv >/dev/null 2>&1; then \
-		echo "Installing MCP servers..."; \
-		uv tool install awslabs.cost-explorer-mcp-server@latest || echo "⚠️  Failed to install cost-explorer-mcp-server"; \
-		uv tool install awslabs.cloudwatch-mcp-server@latest || echo "⚠️  Failed to install cloudwatch-mcp-server"; \
-		uv tool install awslabs.aws-pricing-mcp-server@latest || echo "⚠️  Failed to install aws-pricing-mcp-server"; \
-		uv tool install awslabs.terraform-mcp-server@latest || echo "⚠️  Failed to install terraform-mcp-server"; \
-		uv tool install awslabs.dynamodb-mcp-server@latest || echo "⚠️  Failed to install dynamodb-mcp-server"; \
-		echo "Note: GitHub MCP server requires Docker (ghcr.io/github/github-mcp-server)"; \
-		echo "✅ MCP installation attempt completed"; \
-	else \
-		echo "⚠️  uv not available. MCP servers not installed"; \
-		echo "💡 Install uv with: curl -LsSf https://astral.sh/uv/install.sh \| sh"; \
-		echo "💡 Then run: make mcp-install"; \
-	fi
+	@echo "3️⃣ Installing MCP servers (AWS + GitHub)..."
+	@$(MAKE) mcp-install
 	@echo "✅ Setup complete!"
 	@echo "💡 Run 'source .venv/bin/activate' then 'make run'"
 	@echo "🚀 For AgentCore deployment: 'make agentcore-configure' then 'make agentcore-deploy'"
@@ -157,8 +152,29 @@ mcp-check: ## Check if MCP servers are installed (AWS + GitHub)
 		echo "🔍 Checking GitHub MCP Server status:"; \
 		if [ -f github-mcp-server/github-mcp-server ]; then \
 			echo "✅ GitHub MCP Server binary available at github-mcp-server/github-mcp-server"; \
+			if [ -x github-mcp-server/github-mcp-server ]; then \
+				echo "✅ GitHub MCP Server binary is executable"; \
+			else \
+				echo "⚠️  GitHub MCP Server binary is not executable (run: chmod +x github-mcp-server/github-mcp-server)"; \
+			fi; \
 		else \
 			echo "❌ GitHub MCP Server binary not found"; \
+		fi; \
+		echo ""; \
+		echo "🔑 Checking GitHub configuration:"; \
+		if [ -f src/aws_devops_agent/config/.env ]; then \
+			if grep -q "GITHUB_PERSONAL_ACCESS_TOKEN=" src/aws_devops_agent/config/.env; then \
+				echo "✅ GitHub token found in config file"; \
+			else \
+				echo "❌ GitHub token not found in config file"; \
+			fi; \
+		else \
+			echo "❌ Config file not found at src/aws_devops_agent/config/.env"; \
+		fi; \
+		if [ -n "$$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then \
+			echo "✅ GitHub token found in environment variables"; \
+		else \
+			echo "⚠️  GitHub token not found in environment variables"; \
 		fi; \
 	else \
 		echo "❌ uv not available. Install with: curl -LsSf https://astral.sh/uv/install.sh \| sh"; \
@@ -253,7 +269,20 @@ mcp-test: ## Test MCP server connections
 	@echo "🧪 Testing MCP server connections..."
 	@if [ -f .venv/bin/activate ]; then \
 		source .venv/bin/activate && \
+		echo "🔌 Testing AWS MCP servers..."; \
 		python tests/integration/test_mcp_integration.py; \
+		echo ""; \
+		echo "🐙 Testing GitHub MCP server..."; \
+		if [ -f github-mcp-server/github-mcp-server ] && [ -f src/aws_devops_agent/config/.env ]; then \
+			. src/aws_devops_agent/config/.env; \
+			if [ -n "$$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then \
+				python scripts/test_github_connectivity.py octocat/Hello-World; \
+			else \
+				echo "⚠️  GitHub MCP test skipped - GITHUB_PERSONAL_ACCESS_TOKEN not found"; \
+			fi; \
+		else \
+			echo "⚠️  GitHub MCP test skipped - binary or config not found"; \
+		fi; \
 	else \
 		echo "❌ Virtual environment not found. Run 'make setup' first"; \
 		exit 1; \
@@ -288,7 +317,7 @@ test-integration: ## 🔗 Run integration tests (requires GitHub config)
 	@echo "🔗 Running integration tests..."
 	@if [ -f .venv/bin/activate ]; then \
 		source .venv/bin/activate && \
-		PYTHONPATH=src python -m pytest tests/integration/ -v; \
+		PYTHONPATH=src python -m pytest tests/integration/ -v || [ $$? -eq 2 ]; \
 	else \
 		echo "❌ Virtual environment not found. Run 'make setup' first"; \
 		exit 1; \
@@ -298,7 +327,43 @@ test-complete-workflow: ## 🚀 Run complete workflow test (requires GitHub conf
 	@echo "🚀 Running complete workflow test..."
 	@if [ -f .venv/bin/activate ]; then \
 		source .venv/bin/activate && \
-		PYTHONPATH=src python -m pytest tests/integration/test_complete_workflow.py -v; \
+		PYTHONPATH=src python -m pytest tests/integration/test_complete_workflow.py -v || [ $$? -eq 2 ]; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+test-github: ## 🐙 Run GitHub integration tests (requires GitHub config)
+	@echo "🐙 Running GitHub integration tests..."
+	@if [ -f .venv/bin/activate ]; then \
+		source .venv/bin/activate && \
+		PYTHONPATH=src python -m pytest tests/integration/test_github_mcp.py -v; \
+		EXIT_CODE=$$?; \
+		if [ $$EXIT_CODE -eq 2 ]; then \
+			echo "✅ GitHub tests skipped (no token configured)"; \
+			exit 0; \
+		else \
+			exit $$EXIT_CODE; \
+		fi; \
+	else \
+		echo "❌ Virtual environment not found. Run 'make setup' first"; \
+		exit 1; \
+	fi
+
+github-test-connectivity: ## 🔗 Test GitHub repository connectivity
+	@echo "🔗 Testing GitHub repository connectivity..."
+	@if [ -f .venv/bin/activate ]; then \
+		source .venv/bin/activate && \
+		if [ -f src/aws_devops_agent/config/.env ]; then \
+			. src/aws_devops_agent/config/.env; \
+			if [ -n "$$GITHUB_PERSONAL_ACCESS_TOKEN" ]; then \
+				python scripts/test_github_connectivity.py $(REPO); \
+			else \
+				echo "❌ GITHUB_PERSONAL_ACCESS_TOKEN not found in config"; \
+			fi; \
+		else \
+			echo "❌ Config file not found at src/aws_devops_agent/config/.env"; \
+		fi; \
 	else \
 		echo "❌ Virtual environment not found. Run 'make setup' first"; \
 		exit 1; \
@@ -606,9 +671,13 @@ example: ## Run example (usage: make example TYPE=cost|iac|compliance|cdk|terraf
 			echo "📄 Running document generation example..."; \
 			make query QUERY="Generate a cost analysis report for my AWS infrastructure"; \
 			;; \
+		github) \
+			echo "🐙 Running GitHub integration example..."; \
+			make github-test-connectivity REPO=octocat/Hello-World; \
+			;; \
 		*) \
 			echo "❌ Unknown example type: $(TYPE)"; \
-			echo "Available types: cost, iac, compliance, cdk, terraform, security, data-sources, report"; \
+			echo "Available types: cost, iac, compliance, cdk, terraform, security, data-sources, report, github"; \
 			exit 1; \
 			;; \
 	esac

@@ -85,6 +85,10 @@ __all__ = [
     "analyze_inspector_findings",
     
     # GitHub tools
+    "check_repository_connectivity",
+    "create_branch_simple", 
+    "get_repository_info",
+    "list_repository_branches",
     "create_optimization_pull_request",
     "update_iac_via_github",
     "list_infrastructure_repositories",

@@ -113,6 +113,27 @@ export MCP_TIMEOUT=30
 export MCP_MAX_WORKERS=10
 ```
 
+### GitHub MCP Configuration
+```bash
+# GitHub Personal Access Token (required for GitHub MCP)
+export GITHUB_PERSONAL_ACCESS_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+# GitHub Organization (optional)
+export GITHUB_ORG=your-organization
+
+# GitHub Default Repository (optional)
+export GITHUB_DEFAULT_REPO=your-org/your-repo
+```
+
+**GitHub Token Setup:**
+1. Go to [GitHub Settings > Personal Access Tokens](https://github.com/settings/personal-access-tokens/new)
+2. Generate a new token with these scopes:
+   - `repo` - Full control of private repositories
+   - `read:org` - Read org and team membership
+   - `read:user` - Read user profile data
+   - `project` - Read/write project boards
+3. Copy the token and add it to your `.env` file
+
 ## Environment-Specific Configurations
 
 ### Development Environment
@@ -125,6 +146,8 @@ PORT=8080
 HOST=localhost
 DEBUG_MODE=true
 LOG_LEVEL=DEBUG
+GITHUB_PERSONAL_ACCESS_TOKEN=ghp_dev_token_here
+GITHUB_ORG=dev-organization
 ```
 
 ### Staging Environment
@@ -137,6 +160,8 @@ PORT=8080
 HOST=0.0.0.0
 DEBUG_MODE=false
 LOG_LEVEL=INFO
+GITHUB_PERSONAL_ACCESS_TOKEN=ghp_staging_token_here
+GITHUB_ORG=staging-organization
 ```
 
 ### Production Environment
@@ -150,6 +175,9 @@ HOST=0.0.0.0
 DEBUG_MODE=false
 LOG_LEVEL=WARNING
 CROSS_ACCOUNT_ROLES=prod-account1:DevOpsRole,prod-account2:DevOpsRole
+GITHUB_PERSONAL_ACCESS_TOKEN=ghp_prod_token_here
+GITHUB_ORG=production-organization
+GITHUB_DEFAULT_REPO=prod-org/infrastructure
 ```
 
 ## Model ID Mapping

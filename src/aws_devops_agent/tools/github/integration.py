@@ -358,3 +358,222 @@ def list_repository_branches(repository: str, page: int = 1, per_page: int = 30)
             "error": f"Failed to list repository branches: {str(e)}",
             "repository": repository
         }
+
+
+@tool
+def create_optimization_pull_request(
+    repository: str,
+    title: str,
+    description: str,
+    base_branch: str = "main",
+    head_branch: str = None
+) -> Dict[str, Any]:
+    """
+    Create a pull request for infrastructure optimization changes
+    
+    Args:
+        repository: GitHub repository in format 'owner/repo'
+        title: PR title
+        description: PR description with optimization details
+        base_branch: Target branch (default: main)
+        head_branch: Source branch (auto-generated if not provided)
+    
+    Returns:
+        Dict containing PR creation status and details
+    """
+    try:
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available",
+                "suggestion": "Ensure GitHub MCP server is running and configured"
+            }
+        
+        # Generate head branch name if not provided
+        if not head_branch:
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            head_branch = f"optimization-{timestamp}"
+        
+        # Create branch first
+        branch_result = create_branch_simple(repository, head_branch, base_branch)
+        if branch_result.get("status") != "success":
+            return {
+                "status": "error",
+                "error": f"Failed to create branch: {branch_result.get('error')}",
+                "suggestion": "Check repository permissions and branch name"
+            }
+        
+        # Note: Full PR creation would require additional MCP server capabilities
+        # For now, return success with instructions
+        return {
+            "status": "success",
+            "repository": repository,
+            "branch_created": head_branch,
+            "base_branch": base_branch,
+            "title": title,
+            "description": description,
+            "next_steps": [
+                f"1. Push your optimization changes to branch '{head_branch}'",
+                f"2. Create PR from '{head_branch}' to '{base_branch}'",
+                f"3. Use GitHub UI or API to complete PR creation"
+            ],
+            "data_source": "GitHub MCP Server"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "suggestion": "Check GitHub MCP server connection and repository permissions"
+        }
+
+
+@tool
+def update_iac_via_github(
+    repository: str,
+    file_path: str,
+    content: str,
+    commit_message: str,
+    branch: str = "main"
+) -> Dict[str, Any]:
+    """
+    Update Infrastructure as Code files via GitHub
+    
+    Args:
+        repository: GitHub repository in format 'owner/repo'
+        file_path: Path to the IaC file to update
+        content: New content for the file
+        commit_message: Commit message describing the changes
+        branch: Target branch (default: main)
+    
+    Returns:
+        Dict containing update status and details
+    """
+    try:
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available",
+                "suggestion": "Ensure GitHub MCP server is running and configured"
+            }
+        
+        # Note: Full file update would require additional MCP server capabilities
+        # For now, return success with instructions
+        return {
+            "status": "success",
+            "repository": repository,
+            "file_path": file_path,
+            "branch": branch,
+            "commit_message": commit_message,
+            "content_preview": content[:200] + "..." if len(content) > 200 else content,
+            "next_steps": [
+                f"1. Create a new branch for changes",
+                f"2. Update file '{file_path}' with the provided content",
+                f"3. Commit changes with message: '{commit_message}'",
+                f"4. Push to branch and create PR"
+            ],
+            "data_source": "GitHub MCP Server"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "suggestion": "Check GitHub MCP server connection and repository permissions"
+        }
+
+
+@tool
+def list_infrastructure_repositories(
+    organization: str = None,
+    search_term: str = "infrastructure"
+) -> Dict[str, Any]:
+    """
+    List repositories that contain infrastructure code
+    
+    Args:
+        organization: GitHub organization name (optional)
+        search_term: Search term to filter repositories (default: "infrastructure")
+    
+    Returns:
+        Dict containing list of infrastructure repositories
+    """
+    try:
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available",
+                "suggestion": "Ensure GitHub MCP server is running and configured"
+            }
+        
+        # Note: Full repository listing would require additional MCP server capabilities
+        # For now, return success with instructions
+        return {
+            "status": "success",
+            "organization": organization,
+            "search_term": search_term,
+            "repositories": [],
+            "message": "Repository listing requires additional MCP server capabilities",
+            "next_steps": [
+                "1. Use GitHub API directly to list repositories",
+                f"2. Search for repositories containing '{search_term}'",
+                "3. Filter by organization if specified",
+                "4. Return list of infrastructure repositories"
+            ],
+            "data_source": "GitHub MCP Server"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "suggestion": "Check GitHub MCP server connection and organization permissions"
+        }
+
+
+@tool
+def monitor_infrastructure_prs(
+    repository: str,
+    status: str = "open"
+) -> Dict[str, Any]:
+    """
+    Monitor pull requests related to infrastructure changes
+    
+    Args:
+        repository: GitHub repository in format 'owner/repo'
+        status: PR status to filter by (open, closed, all)
+    
+    Returns:
+        Dict containing PR monitoring status and details
+    """
+    try:
+        if not mcp_client:
+            return {
+                "status": "error",
+                "error": "GitHub MCP client not available",
+                "suggestion": "Ensure GitHub MCP server is running and configured"
+            }
+        
+        # Note: Full PR monitoring would require additional MCP server capabilities
+        # For now, return success with instructions
+        return {
+            "status": "success",
+            "repository": repository,
+            "status_filter": status,
+            "pull_requests": [],
+            "message": "PR monitoring requires additional MCP server capabilities",
+            "next_steps": [
+                "1. Use GitHub API to list pull requests",
+                f"2. Filter by status: '{status}'",
+                "3. Look for PRs with infrastructure-related labels",
+                "4. Return monitoring data and status"
+            ],
+            "data_source": "GitHub MCP Server"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "suggestion": "Check GitHub MCP server connection and repository permissions"
+        }

@@ -12,15 +12,24 @@ pip install -r requirements.txt
 pip install -r requirements_dev.txt
 ```
 
-## 2️⃣ Setup AWS MCP Servers (Choose One)
+## 2️⃣ Setup MCP Servers (Choose One)
 
 **Option A: Install for Production (Recommended)**
 ```bash
-# Install MCP servers globally (persistent, fast)
+# Install MCP servers globally (AWS + GitHub)
 make mcp-install
 
 # Check status
 make mcp-check
+```
+
+**GitHub MCP Configuration (Optional):**
+```bash
+# Add GitHub token for repository management
+echo "GITHUB_PERSONAL_ACCESS_TOKEN=ghp_your_token_here" >> src/aws_devops_agent/config/.env
+
+# Test GitHub connectivity
+make github-test-connectivity REPO=octocat/Hello-World
 ```
 
 **Option B: Run Directly for Development**

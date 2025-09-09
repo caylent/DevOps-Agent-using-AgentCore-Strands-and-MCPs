@@ -5,7 +5,12 @@ from .integration import (
     check_repository_connectivity,
     create_branch_simple, 
     get_repository_info,
-    list_repository_branches
+    list_repository_branches,
+    # Infrastructure automation functions
+    create_optimization_pull_request,
+    update_iac_via_github,
+    list_infrastructure_repositories,
+    monitor_infrastructure_prs
 )
 
 __all__ = [
@@ -13,5 +18,10 @@ __all__ = [
     "check_repository_connectivity",
     "create_branch_simple", 
     "get_repository_info",
-    "list_repository_branches"
+    "list_repository_branches",
+    # Infrastructure automation functions
+    "create_optimization_pull_request",
+    "update_iac_via_github",
+    "list_infrastructure_repositories",
+    "monitor_infrastructure_prs"
 ]
