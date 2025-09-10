@@ -228,3 +228,4 @@ reports/**/*.pdf
 # Local session data - contains conversation history and private data
 .sessions/
 *.session
+github-mcp-server
