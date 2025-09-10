@@ -108,15 +108,17 @@ make run              # Start the agent
 
 ### 🔧 **Manual Way**
 ```bash
-# Development mode
-python main.py --mode interactive
+# Development mode (requires virtual environment)
+source .venv/bin/activate
+PYTHONPATH=src python main.py --mode interactive
 
-# Or using module syntax
-python -m src.aws_devops_agent.main --mode demo
+# Demo mode
+source .venv/bin/activate
+PYTHONPATH=src python main.py --mode demo
 
-# Production installation
-pip install -e .
-aws-devops-agent --mode interactive
+# Single query
+source .venv/bin/activate
+PYTHONPATH=src python main.py --query "your query here"
 ```
 
 ## ✅ Done! 
@@ -144,41 +146,49 @@ make query QUERY="your query"  # Single query
 
 # Setup & Installation
 make setup             # Complete setup: create venv, install deps, install MCP servers
-make install           # Install dependencies only (if venv exists)
-
-# Development & Testing
-make test              # Run all tests
-make format            # Format code
-
-# MCP Server Management
-make mcp-check         # Check if MCP servers are installed
-make mcp-install       # Install AWS MCP servers
-make mcp-test          # Test MCP server connections
-
-# Deployment & Utilities
-make deploy            # Deploy to Bedrock Agent Core
+make install           # Alias for setup (same as make setup)
 make clean             # Clean up temporary files and virtual environment
 make status            # Show project status
 
-# Examples
-make example-cost      # Run cost analysis example
-make example-iac       # Run IaC analysis example
-make example-compliance # Run compliance check example
+# MCP Server Management
+make mcp-check         # Check if MCP servers are installed (AWS + GitHub)
+make mcp-install       # Install AWS MCP servers + GitHub MCP server
+make mcp-test          # Test MCP server connections
+
+# Development & Testing
+make test              # Run core tests (unit + document generation)
+make test-integration  # Run integration tests (requires GitHub config)
+make format            # Format code
+
+# Examples & Demos
+make example TYPE=cost # Run cost analysis example
+make example TYPE=iac  # Run IaC analysis example
+make example TYPE=compliance # Run compliance check example
+make example TYPE=github # Test GitHub connectivity
+
+# AgentCore Deployment (Production)
+make agentcore-configure # Configure AgentCore for deployment
+make agentcore-deploy    # Deploy to Bedrock AgentCore (PRODUCTION)
+make agentcore-test      # Test deployed AgentCore agent
 ```
 
-### **Manual Commands**
+### **Manual Commands (Advanced)**
 ```bash
-# Interactive mode
-python main.py --mode interactive
+# Interactive mode (requires virtual environment)
+source .venv/bin/activate
+PYTHONPATH=src python main.py --mode interactive
 
 # Demo scenarios
-python main.py --mode demo
+source .venv/bin/activate
+PYTHONPATH=src python main.py --mode demo
 
 # Single query
-python main.py --query "Analyze AWS costs for my infrastructure"
+source .venv/bin/activate
+PYTHONPATH=src python main.py --query "Analyze AWS costs for my infrastructure"
 
-# Production mode
-aws-devops-agent --mode interactive
+# Run without account selection
+source .venv/bin/activate
+PYTHONPATH=src python main.py --mode interactive --no-account-selection
 ```
 
 ## 🚀 AgentCore Deployment (Production)

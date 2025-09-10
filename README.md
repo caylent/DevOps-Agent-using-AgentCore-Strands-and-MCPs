@@ -121,18 +121,22 @@ make run
 git clone https://github.com/your-org/strands-bedrock-mcp-devops-agent
 cd strands-bedrock-mcp-devops-agent
 
-# 2. Install dependencies
+# 2. Create virtual environment
+python3 -m venv .venv
+source .venv/bin/activate
+
+# 3. Install dependencies
 pip install -r requirements.txt
 
-# 3. Install MCP Servers
+# 4. Install MCP Servers
 make mcp-install
 
-# 4. Configure environment
+# 5. Configure environment
 cp .env.example .env
 # Edit .env with your AWS credentials
 
-# 5. Run the agent
-python main.py --mode interactive
+# 6. Run the agent
+PYTHONPATH=src python main.py --mode interactive
 ```
 
 ### **Available Commands**
@@ -144,11 +148,22 @@ make query QUERY="your query"  # Single query
 
 # Setup & Installation
 make setup             # Complete setup: create venv, install deps, install MCP servers
-make install           # Install dependencies only (if venv exists)
+make install           # Alias for setup (same as make setup)
+make clean             # Clean up temporary files and virtual environment
+
+# MCP Server Management
+make mcp-check         # Check if MCP servers are installed
+make mcp-install       # Install AWS MCP servers + GitHub MCP server
+make mcp-test          # Test MCP server connections
 
 # Development & Testing
-make test              # Run all tests
+make test              # Run core tests (unit + document generation)
+make test-integration  # Run integration tests (requires GitHub config)
 make format            # Format code
+
+# Examples & Demos
+make example TYPE=cost # Run cost analysis example
+make example TYPE=iac  # Run IaC analysis example
 ```
 
 ## 💬 Example Conversations
@@ -338,12 +353,6 @@ This is a demonstration project for AWS re:Invent presentation. The architecture
 ### **Demos & Examples**
 - 📁 **[Demos](docs/demos/)** - Interactive demo scripts and examples for testing agent capabilities
 
-## 🔗 Official AWS MCP Servers
-
-- [AWS Pricing MCP Server](https://awslabs.github.io/mcp/servers/aws-pricing-mcp-server/)
-- [AWS DynamoDB MCP Server](https://awslabs.github.io/mcp/servers/dynamodb-mcp-server/) 
-- [Full AWS MCP Documentation](https://awslabs.github.io/mcp/)
-
 ---
 
 ## 📄 License
@@ -371,7 +380,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---
-
-**🎉 Ready for production!** 
-
-This agent provides **real AWS data integration** via official MCP servers, not simulated responses. Always emphasize data authenticity and provide specific, actionable recommendations with cost implications.
